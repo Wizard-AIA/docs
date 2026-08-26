@@ -1,18 +1,10 @@
-# Architecture
+# Architecture & Control Plane
 
-## One request path
+Wizard operates on an **autonomous iterative feedback loop** rather than a one-shot generation pipeline. Real data analysis requires observing real intermediary data, discovering dirty keys, pivoting strategies when assumptions fail, and independently verifying findings.
 
-Both the REST endpoint (`POST /api/chat`) and the WebSocket
-(`WS /ws/chat`) call the same orchestrator. The transport only translates
-internal events into frames for the client — it contains no workflow logic
-of its own. That matters in practice: two implementations of the same loop
-drift, and drift is where a feature works in the chat UI but not in the API,
-or vice versa.
+---
 
-## This is a loop, not a pipeline
-
-Each iteration, the manager model sees what has actually run and chooses the
-next move; the run ends when it says it can answer, or the budget is spent.
+## 🏛️ High-Level System Architecture
 
 ```mermaid
 graph TD
@@ -22,107 +14,83 @@ graph TD
     classDef sandbox fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#000;
     classDef store fill:#64748b,stroke:#334155,stroke-width:2px,color:#fff;
 
-    UI["Next.js client<br/>(streams every move)"]:::client
-    WS["FastAPI · WS /ws/chat"]:::api
-    Session["Session<br/>tables · documents · sandbox"]:::api
-    Loop["Analysis loop<br/>bounded by the tier budget"]:::api
+    UI["Next.js Client<br/>(Streams Every Move)"]:::client
+    WS["FastAPI WS /ws/chat<br/>(Streaming Transport)"]:::api
+    Session["Session Context<br/>Datasets · Docs · State"]:::api
+    Orchestrator["Agent Orchestrator<br/>Iterative ReAct Loop"]:::api
 
-    Manager["Manager model<br/>decide · revise · answer"]:::brain
-    Worker["Worker model<br/>Python"]:::brain
+    Manager["Manager Model<br/>Reason · Plan · Synthesize"]:::brain
+    Worker["Worker Model<br/>Python Code Synthesis"]:::brain
 
-    Guard["Code guard<br/>AST policy check"]:::sandbox
-    Box["Per-session sandbox<br/>subprocess or container"]:::sandbox
+    Router["Task Router<br/>Lightweight vs Deep Tier"]:::brain
+    Guard["Code Guard<br/>AST Static Policy Check"]:::sandbox
+    Sandbox["Execution Sandbox<br/>OS Subprocess / Docker"]:::sandbox
 
-    Trust["Trust layer<br/>verify · ground · assumptions"]:::store
-    Store["SQLite<br/>cache · trajectories · memory"]:::store
-    Retr["Retriever<br/>columns · memory · documents"]:::store
+    Trust["Trust Layer<br/>Re-derivation & Grounding"]:::store
+    Store["SQLite Store<br/>Cache · State · Semantic Embeddings"]:::store
+    Retr["Retriever<br/>Schema · Docs · Skills RAG"]:::store
 
-    UI <-->|typed event frames| WS
-    WS --> Session --> Loop
-    Loop <--> Retr <--> Store
+    UI <-->|Typed Event Frames| WS
+    WS --> Session --> Orchestrator
+    Orchestrator <--> Retr <--> Store
 
-    Loop -->|"1 what next?"| Manager
-    Manager -->|"2 inspect / consult"| Retr
-    Manager -->|"3 write code for this sub-task"| Worker
-    Worker --> Guard -->|allowed| Box
-    Box -->|"4 real output"| Loop
-    Loop -.->|"repeat until answerable"| Manager
-    Loop -->|5| Trust
-    Trust -->|"6 synthesise from real output"| Manager
+    Orchestrator -->|"1. Analyze Intent"| Router
+    Router --> Manager
+    Manager -->|"2. Consult Reference"| Retr
+    Manager -->|"3. Synthesize Code"| Worker
+    Worker --> Guard -->|Allowed| Sandbox
+    Sandbox -->|"4. Real Execution Output"| Orchestrator
+    Orchestrator -.->|"Repeat until answered"| Manager
+    Orchestrator --> Trust
+    Trust -->|"5. Synthesize Verified Report"| Manager
 ```
 
-The dotted line is the part that matters: step 4 feeds back into step 1. The
-manager sees what the code actually produced and picks the next move from
-it, so a plan that turns out to be wrong gets rewritten instead of carried
-out regardless. Real analytical work is rarely one step — you find out a
-join key is dirty, or that "active customer" means three different things in
-three tables, only once you've looked. A fixed-plan design can't recover
-from that; a loop can.
+---
 
-The old shape (fix a plan up front, feed 200 characters of each step's
-output into the next) could not recover when the data contradicted the
-plan. [DABstep](https://arxiv.org/abs/2506.23719) measures the gap this
-closes: hard tasks need 6+ dependent steps, and the best model scored
-14.55% on them versus 76.39% on single-step ones — with planning as the
-largest error category.
+## 🧠 Dual-Model Execution Roles
 
-## The actions available each iteration
+1. **Manager Role (`MODEL_NAME`):**
+   - Directs the investigation strategy.
+   - Formulates and tracks analytical hypotheses.
+   - Decides whether to run code, consult reference documentation, branch into parallel investigations, or answer.
+   - Synthesizes user-facing narratives from verified output.
 
-| Action | What happens |
-|---|---|
-| `inspect` | Answered deterministically from the session state — no model call. Cheap enough to reach for often. |
-| `code` | The worker writes Python for the current sub-task; it's statically screened, then executed. |
-| `consult` | Retrieves from attached reference documents or installed skills. |
-| `reflect` | The manager revises its plan given what's happened so far. |
-| `parallel` | Fans one step out into several concurrent, isolated mini-investigations (larger models/tiers only). |
-| `answer` | Ends the loop and triggers verification (unless running in `fast` mode). |
+2. **Worker Role (`WORKER_MODEL_NAME`):**
+   - Writes production-grade Python code (using Pandas, DuckDB, Polars, or Scikit-Learn).
+   - Constrained by AST policies and informed by the exact installed runtime capabilities.
 
-Malformed model output never crashes the loop — it resolves to a sensible
-default (`code` mid-run, a forced `answer` on the final iteration). A small
-model saying something unparseable shouldn't derail an otherwise-working
-analysis.
+3. **Task Complexity Router:**
+   - Evaluates incoming turns.
+   - Dispatches simple metadata/schema requests to fast, lightweight models.
+   - Directs complex investigations to deep reasoning models.
 
-## Depth and tiers
+---
 
-Three depths are available: **fast** (one shot, no verification — the
-cheapest and least self-checking option), **auto** (the agent picks its own
-depth), and **deep** (thorough, with a decision round-trip on every
-iteration regardless of model size).
+## ⚖️ The Evidence-Backed Control Plane
 
-Below a certain model size, the loop stops asking the model to choose its
-next action at all — reading the transcript and picking from three
-options a small model doesn't reliably distinguish costs a round-trip and
-buys nothing. Instead: a step that succeeded and printed something means
-stop, anything else means write code. That's the difference between a
-nine-call turn and a three-call one on a laptop-sized model. Picking **Deep**
-in the composer restores the full round-trip at any size.
+Wizard incorporates multi-layered verification to ensure statistical soundness:
 
-## Self-correction
+### 1. Adversarial Critic & Competing Methods
+When answering ambiguous or high-stakes analytical questions, Wizard evaluates competing analytical routes (e.g. comparing Parametric vs Non-parametric tests, or Logistic Regression vs Random Forest) to verify consensus.
 
-When execution fails, the traceback is fed back into the worker's prompt and
-the sub-task is retried, up to a configured limit. A failure that's
-successfully repaired is remembered and shown as a counter-example the next
-time a similar question comes up — so the same mistake doesn't repeat
-itself. A sub-task that fails outright isn't fatal to the turn: it becomes
-an observation, and the agent routes around it.
+### 2. Result Grounding Check
+Every numerical claim in the final answer is traced back to actual execution stdout. Any ungrounded figures (numbers fabricated without execution backing) are prominently flagged.
 
-## Trust, not just an answer
+### 3. Headline Result Re-Derivation
+The central conclusion is independently computed through an alternative calculation path (e.g., cross-checking SQL aggregate output with native Python arithmetic).
 
-See [Data Modes & Privacy](data-modes-and-privacy.md) for what leaves your
-machine, but the trust layer itself runs regardless of provider:
+### 4. Transparent Assumption Extraction
+Silent code decisions — such as dropped null values, inner join data loss, coerced timestamp formats, or top-N truncations — are extracted and surfaced alongside the final answer.
 
-- **Verification** re-derives the headline result by a different route and
-  reports a match or mismatch. A wrong join grain produces a confident,
-  plausible, wrong number that self-review by the same model wouldn't catch
-  — a second, independent computation can.
-- **Grounding** flags any number in the answer that appears in no execution
-  output. Tolerance is based on the answer's own precision, so reporting
-  `3.14` from an output of `3.14159` isn't flagged as invention.
-- **Assumptions** are read back out of the code that actually ran — dropped
-  nulls, an inner join, a top-N cut, a coerced date — because each one
-  changes what the number means, and none of them are visible from the
-  answer text alone.
+---
 
-This is deterministic, not another model call reviewing its own work, and it
-reports rather than edits: it never rewrites the model's answer, only
-annotates it.
+## 🛡️ Sandboxing & Execution Isolation
+
+Generated Python code runs in strictly bounded environments:
+
+- **Host Mode (`EXECUTION_BACKEND=host`, Default):**
+  - **Linux:** Enforced via `Landlock` filesystem restriction and `seccomp` system call filtering (AF_INET outbound blocked).
+  - **macOS:** Enforced via `sandbox-exec` profiles with denied network and read/write confinement to the session directory.
+  - **Windows:** Enforced via Windows Job Objects and Low Integrity security tokens.
+- **Docker Mode (`EXECUTION_BACKEND=docker`):**
+  - Dedicated per-session container with `cap_drop=ALL`, `no-new-privileges`, memory/PID ceilings, and optional gVisor (`runsc`) kernel isolation.

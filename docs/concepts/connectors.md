@@ -1,62 +1,46 @@
-# Connectors
+# Data Connectors & Ingestion
 
-Databases, document stores, and object storage are an ingest source
-**parallel to file upload** — not a different code path with different
-guarantees.
+Wizard ingests a wide array of tabular, document, and database formats while preserving local-first privacy.
 
-## Snapshot, not live pushdown
+---
 
-A connection is read once, in the backend process, and the result is
-materialized into your session exactly like an uploaded file would be.
-**Generated code never holds a connector and never opens a socket of its
-own** — it only ever sees the resulting table. That matters for two reasons:
-the network-deny sandbox policy keeps meaning what it says even when a
-database is involved, and a write-back gate (below) is a real, enforceable
-decision rather than something advisory that generated code could route
-around.
+## 📊 Tabular Formats & Engines
 
-## Adding support for a database
+Wizard natively reads and processes the following formats directly in memory and sandbox environments:
 
-Whether a given database is reachable is a question of which driver is
-installed, not a question of whether Wizard supports it — the interface is
-the deliverable. Drivers are **probed**, never eagerly imported, so the
-connectors page renders instantly regardless of what's installed. A missing
-driver is listed along with the `pip install` command for it, rather than
-hidden — hiding it would let you conclude Wizard can't reach a database that
-one install away would fix.
+| Format | Extension | Recommended Engine | Description |
+|---|---|---|---|
+| **CSV / TSV** | `.csv`, `.tsv` | DuckDB / Polars / Pandas | Ingests delimited text with automatic delimiter and header detection. |
+| **Apache Parquet** | `.parquet`, `.pq` | PyArrow / DuckDB / Polars | High-efficiency columnar format with snappy/gzip compression. |
+| **Apache Feather** | `.feather`, `.ft` | PyArrow / Polars | Ultra-fast zero-copy memory-mapped dataframe serialization. |
+| **Microsoft Excel** | `.xlsx`, `.xls`, `.xlsm` | Openpyxl / Pandas | Multi-sheet spreadsheet ingestion. |
+| **JSON / NDJSON** | `.json`, `.jsonl`, `.ndjson` | Pandas / Polars | Structured records and newline-delimited JSON. |
 
-## Reading is bounded automatically
+---
 
-A connector's read is capped by row count, the same way an upload is capped
-by file size — a table isn't allowed to unboundedly balloon a session's
-memory just because it came from a query instead of a file. Truncation, when
-it happens, is reported rather than silent.
+## ⚡ Zero-Copy Apache Arrow IPC Streaming
 
-## Consent
+For large datasets (100,000+ rows), serializing tabular data into JSON strings creates severe CPU serialization lag and browser memory spikes.
 
-Opening a saved connection is gated the same way any other consequential
-action is — see [Permissions & Consent](permissions-and-consent.md). Saving
-a connection is **not** gated, because saving reaches nothing on its own;
-only opening it does.
+Wizard incorporates **Apache Arrow IPC Streaming** (`/api/workspace/stream-arrow`):
 
-## Write-back has three independent locks
+- **Backend:** DataFrames are chunked into PyArrow RecordBatches and streamed in binary Arrow IPC format (`application/vnd.apache.arrow.stream`).
+- **Frontend:** Next.js consumes the raw binary stream directly via `@apache-arrow/es2015` and mounts it to virtualized data grid components with **zero intermediate JSON overhead**.
 
-Writing a session table back to its source needs all three, every time:
+---
 
-1. The connection isn't marked read-only.
-2. Write-back generally isn't denied for that category.
-3. A grant recorded specifically for *that table*, in *that* connection —
-   approving a write to a staging table is not approving one to a
-   production table in the same database.
+## 📑 Reference Documents & Data Dictionaries
 
-Database writes always ask, on every session, regardless of your consent
-profile — there's no setting that skips this one.
+You can attach contextual documentation alongside your dataset:
 
-## A connection is configuration; its data isn't
+- Supported formats: `.pdf`, `.docx`, `.md`, `.markdown`, `.txt`, `.rst`, `.html`
+- **Context Injection:** When an analytical question references business rules, ambiguous acronyms, or column definitions, Wizard performs RAG retrieval on attached documents mid-investigation.
 
-The non-secret half of a connection (host, database name, which tables)
-persists so it survives past any one session — an exported analysis script
-can look a connection up **by name** at run time. The credential half is
-kept separately, and a connection spec only ever carries a *reference* to a
-credential, never the credential itself. There's no field to remember to
-strip when sharing a script, because there was never a field to strip.
+---
+
+## 🗄️ Relational Database Connectors
+
+Wizard supports direct connections to relational databases (PostgreSQL, MySQL, SQLite, DuckDB):
+
+- Queries execute with strict row bounds to prevent unbounded memory consumption.
+- Schema metadata is extracted once per session and indexed into the local SQLite store.

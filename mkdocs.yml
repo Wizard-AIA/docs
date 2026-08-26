@@ -11,12 +11,14 @@ theme:
     - media: "(prefers-color-scheme: light)"
       scheme: default
       primary: indigo
+      accent: sky
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: indigo
+      accent: sky
       toggle:
         icon: material/brightness-4
         name: Switch to light mode
@@ -25,22 +27,43 @@ theme:
     - navigation.tracking
     - navigation.tabs
     - navigation.sections
+    - navigation.expand
     - navigation.top
+    - navigation.footer
     - content.code.copy
+    - content.code.annotate
     - content.action.edit
     - search.suggest
     - search.highlight
   icon:
     repo: fontawesome/brands/github
 
+extra_css:
+  - stylesheets/extra.css
+
 markdown_extensions:
   - admonition
   - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.keys
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - tables
+  - attr_list
+  - md_in_html
   - toc:
       permalink: true
 
@@ -51,6 +74,8 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/Wizard-AIA
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com
 
 nav:
   - Home: index.md
@@ -59,13 +84,13 @@ nav:
       - Quickstart: getting-started/quickstart.md
       - The wizard CLI: getting-started/cli.md
   - Concepts:
-      - Architecture: concepts/architecture.md
+      - Architecture & Control Plane: concepts/architecture.md
       - Task Routing & Tiers: concepts/routing-and-tiers.md
       - Data Modes & Privacy: concepts/data-modes-and-privacy.md
       - Execution & Sandboxing: concepts/execution-and-sandboxing.md
       - Permissions & Consent: concepts/permissions-and-consent.md
       - Skills: concepts/skills.md
-      - Connectors: concepts/connectors.md
+      - Connectors & Streaming: concepts/connectors.md
   - Guides:
       - Exploratory Data Analysis: guides/exploratory-data-analysis.md
       - Model Training: guides/model-training.md
