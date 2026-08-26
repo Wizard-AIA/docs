@@ -200,14 +200,14 @@ export function HeroSection() {
         </div>
       </div>
       
-      {/* Install command — one action, no competing numbers */}
+      {/* Install command — centered */}
       <div
-        className={`absolute bottom-12 left-0 right-0 px-6 lg:px-12 transition-all duration-700 delay-500 ${
+        className={`absolute bottom-12 left-0 right-0 px-6 lg:px-12 transition-all duration-700 delay-500 flex justify-center ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="max-w-[1400px] mx-auto flex flex-col items-start gap-3 lg:max-w-[520px]">
-          <HeroTerminal command="brew install wizard" />
+        <div className="w-full max-w-[620px] mx-auto flex flex-col items-center justify-center gap-3 text-center">
+          <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard" />
           <Link
             href="/download"
             className="group inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"

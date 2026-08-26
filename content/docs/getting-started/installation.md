@@ -7,6 +7,7 @@ Wizard is designed to run entirely locally on your machine. You can install and 
 The easiest way to install Wizard:
 
 ```bash
+brew tap Wizard-AIA/wizard
 brew install wizard
 wizard init
 wizard start
