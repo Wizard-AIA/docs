@@ -1,34 +1,31 @@
-# Wizard Docs
+# Wizard Documentation & Landing Portal
 
-Source for [wizard-aia.github.io/docs](https://wizard-aia.github.io/docs/),
-the documentation site for [Wizard](https://github.com/Wizard-AIA/Wizard-w2)
-— a local-first autonomous data analysis agent.
+Official landing page and documentation hub for **[Wizard](https://github.com/Wizard-AIA/Wizard-w2)** — the local-first autonomous AI data analysis agent.
 
-## Local preview
+## 🚀 Overview
+
+Built with:
+- **Framework:** Next.js 16 (App Router + Turbopack)
+- **Styling:** TailwindCSS v4 + Radix UI
+- **Components:** Interactive 3D ASCII canvas, documentation search dialog, live code previews, and responsive landing sections.
+
+## 🛠️ Development
 
 ```bash
-pip install -r requirements.txt
-mkdocs serve
+pnpm install
+pnpm dev
 ```
 
-Open **http://localhost:8000**.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-## Structure
+## 📦 Static Production Build
 
-- `docs/getting-started/` — installation, quickstart, the CLI
-- `docs/concepts/` — architecture, data modes, sandboxing, permissions,
-  skills, connectors
-- `docs/guides/` — task-oriented walkthroughs
-- `docs/reference/` — configuration and the API/event protocol
-- `docs/troubleshooting/` — the edge-cases and gotchas page
+```bash
+pnpm build
+```
 
-Internal/dev-facing documentation (the milestone evolution spec, migration
-notes) intentionally stays in the core repo next to the code it describes —
-see [CONTRIBUTING.md](CONTRIBUTING.md) for why.
+Prerenders static HTML/CSS/JS ready for deployment on GitHub Pages, Cloudflare Pages, or Vercel.
 
-Deployed automatically on every push to `main` via
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+## 📄 License
 
-## License
-
-BSD 3-Clause, matching the core repo — see [LICENSE](LICENSE).
+MIT / BSD-3-Clause — matching the core Wizard project.
