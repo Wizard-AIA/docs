@@ -4,7 +4,7 @@ Wizard ingests a wide array of tabular, document, and database formats while pre
 
 ---
 
-## 📊 Tabular Formats & Engines
+## Tabular Formats & Engines
 
 Wizard natively reads and processes the following formats directly in memory and sandbox environments:
 
@@ -18,7 +18,7 @@ Wizard natively reads and processes the following formats directly in memory and
 
 ---
 
-## ⚡ Zero-Copy Apache Arrow IPC Streaming
+## Zero-Copy Apache Arrow IPC Streaming
 
 For large datasets (100,000+ rows), serializing tabular data into JSON strings creates severe CPU serialization lag and browser memory spikes.
 
@@ -29,7 +29,7 @@ Wizard incorporates **Apache Arrow IPC Streaming** (`/api/workspace/stream-arrow
 
 ---
 
-## 📑 Reference Documents & Data Dictionaries
+## Reference Documents & Data Dictionaries
 
 You can attach contextual documentation alongside your dataset:
 
@@ -38,7 +38,7 @@ You can attach contextual documentation alongside your dataset:
 
 ---
 
-## 🗄️ Relational Database Connectors
+## ️ Relational Database Connectors
 
 Wizard supports direct connections to relational databases (PostgreSQL, MySQL, SQLite, DuckDB):
 

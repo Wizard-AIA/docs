@@ -87,8 +87,14 @@ export default function DocsHomePage() {
   return (
     <div className="max-w-4xl">
       <Reveal>
-        <h1 className="mb-4 font-display text-4xl tracking-tight text-foreground lg:text-5xl">Wizard Docs</h1>
-        <p className="mb-8 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+        <div className="mb-3 inline-flex items-center gap-2 font-mono text-xs text-white/50">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#eca8d6]" />
+          <span>Documentation Hub</span>
+        </div>
+        <h1 className="mb-4 font-display text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15]">
+          Wizard Docs
+        </h1>
+        <p className="mb-8 max-w-2xl text-[16px] leading-relaxed text-white/70">
           A local-first autonomous data analysis agent. Investigates, executes real code in secure sandboxes,
           self-corrects on errors, and independently verifies conclusions.
         </p>
@@ -97,69 +103,79 @@ export default function DocsHomePage() {
       <Reveal delay={80} className="mb-16 flex flex-wrap gap-3">
         <Link
           href="/docs/getting-started/installation"
-          className="inline-flex items-center gap-2 rounded-full bg-foreground px-5 py-2.5 text-sm font-medium text-background transition-colors hover:bg-foreground/90"
+          className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-medium text-black transition-all hover:bg-white/90 shadow-sm"
         >
           Download &amp; Install
           <ArrowRight className="h-4 w-4" />
         </Link>
         <Link
           href="/docs/getting-started/quickstart"
-          className="inline-flex items-center gap-2 rounded-full border border-border px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-foreground/5"
+          className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-white/[0.08] hover:border-white/30"
         >
           5-Minute Quickstart
         </Link>
       </Reveal>
 
-      <h2 className="mb-6 font-mono text-xs uppercase tracking-widest text-muted-foreground">Explore the docs</h2>
+      <h2 className="mb-6 font-mono text-xs uppercase tracking-widest text-white/40">
+        Explore Documentation
+      </h2>
       <div className="mb-20 grid gap-4 sm:grid-cols-2">
         {sections.map((section, i) => (
           <Reveal key={section.title} delay={i * 60}>
             <Link
               href={section.href}
-              className="group block rounded-lg border border-border p-5 transition-colors hover:border-foreground/30"
+              className="group block rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-[#eca8d6]/40 hover:bg-white/[0.04]"
             >
               <div className="mb-2 flex items-center justify-between">
-                <h3 className="font-medium text-foreground">{section.title}</h3>
-                <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+                <h3 className="font-display text-base font-medium text-white group-hover:text-[#eca8d6] transition-colors">
+                  {section.title}
+                </h3>
+                <ArrowRight className="h-4 w-4 text-white/40 transition-transform group-hover:translate-x-1 group-hover:text-white" />
               </div>
-              <p className="text-sm leading-relaxed text-muted-foreground">{section.description}</p>
+              <p className="text-sm leading-relaxed text-white/60">{section.description}</p>
             </Link>
           </Reveal>
         ))}
       </div>
 
       <Reveal>
-        <h2 className="mb-6 font-display text-2xl tracking-tight text-foreground">How Wizard works</h2>
+        <h2 className="mb-6 font-display text-2xl lg:text-3xl font-semibold tracking-tight text-white border-b border-white/10 pb-3">
+          How Wizard Works
+        </h2>
       </Reveal>
-      <ol className="mb-20 space-y-3">
+      <ol className="mb-20 space-y-3.5">
         {howItWorks.map((step, i) => (
-          <Reveal key={step.title} delay={i * 60} as="li" className="flex gap-3 text-sm">
-            <span className="font-mono text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
-            <p className="text-foreground/80">
-              <span className="font-medium text-foreground">{step.title}:</span> {step.body}
+          <Reveal key={step.title} delay={i * 60} as="li" className="flex gap-4 text-[15px] leading-relaxed">
+            <span className="font-mono text-xs font-semibold text-[#eca8d6] mt-0.5">
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <p className="text-white/75">
+              <strong className="font-semibold text-white">{step.title}:</strong> {step.body}
             </p>
           </Reveal>
         ))}
       </ol>
 
       <Reveal>
-        <h2 className="mb-6 font-display text-2xl tracking-tight text-foreground">Local vs cloud data modes</h2>
+        <h2 className="mb-6 font-display text-2xl lg:text-3xl font-semibold tracking-tight text-white border-b border-white/10 pb-3">
+          Local vs Cloud Data Modes
+        </h2>
       </Reveal>
-      <Reveal delay={80} className="mb-8 overflow-x-auto rounded-lg border border-border">
+      <Reveal delay={80} className="mb-8 overflow-x-auto rounded-xl border border-white/10 bg-black/40 shadow-sm">
         <table className="w-full border-collapse text-sm">
-          <thead className="border-b border-border bg-muted/40">
+          <thead className="border-b border-white/10 bg-white/[0.04] text-xs uppercase tracking-wider text-white/90">
             <tr>
-              <th className="px-4 py-2.5 text-left font-medium text-foreground">Capability</th>
-              <th className="px-4 py-2.5 text-left font-medium text-foreground">Local mode</th>
-              <th className="px-4 py-2.5 text-left font-medium text-foreground">Cloud permitted</th>
+              <th className="px-5 py-3 text-left font-semibold text-white">Capability</th>
+              <th className="px-5 py-3 text-left font-semibold text-[#eca8d6]">Local mode</th>
+              <th className="px-5 py-3 text-left font-semibold text-white/70">Cloud permitted</th>
             </tr>
           </thead>
           <tbody>
             {dataModes.map((row) => (
-              <tr key={row.capability}>
-                <td className="border-t border-border px-4 py-2.5 font-medium text-foreground">{row.capability}</td>
-                <td className="border-t border-border px-4 py-2.5 text-foreground/80">{row.local}</td>
-                <td className="border-t border-border px-4 py-2.5 text-foreground/80">{row.cloud}</td>
+              <tr key={row.capability} className="transition-colors hover:bg-white/[0.02]">
+                <td className="border-t border-white/5 px-5 py-3.5 font-medium text-white/90">{row.capability}</td>
+                <td className="border-t border-white/5 px-5 py-3.5 text-white/80">{row.local}</td>
+                <td className="border-t border-white/5 px-5 py-3.5 text-white/60">{row.cloud}</td>
               </tr>
             ))}
           </tbody>

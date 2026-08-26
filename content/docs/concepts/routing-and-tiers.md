@@ -8,7 +8,7 @@ vision roles (`MODEL_NAME`, `WORKER_MODEL_NAME`, `VISION_MODEL_NAME`) each do.
 
 ---
 
-## ⚡ Task Complexity Classifier
+## Task Complexity Classifier
 
 Rather than routing every single turn through heavy reasoning models, the **Task Router** inspects the user query and dataset context to classify the task into three complexity tiers:
 
@@ -20,7 +20,7 @@ Rather than routing every single turn through heavy reasoning models, the **Task
 
 ---
 
-## 🔄 Dynamic Turn Downscaling
+## Dynamic Turn Downscaling
 
 When a user has multiple local models installed (e.g., both `qwen2.5:3b` and a larger `qwen2.5:14b`), Wizard automatically routes `LIGHTWEIGHT` sub-tasks to the faster model while preserving the primary model for `REASONING_HEAVY` investigation.
 

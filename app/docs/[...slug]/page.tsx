@@ -1,12 +1,12 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, ChevronRight, ExternalLink } from "lucide-react"
 import { DocContent } from "@/components/docs/doc-content"
 import { DocsToc } from "@/components/docs/docs-toc"
 import { Reveal } from "@/components/reveal"
 import { getAllDocSlugs, getDocSource, extractHeadings } from "@/lib/docs-content"
-import { findDocPage, getAdjacentPages } from "@/lib/docs-nav"
+import { findDocPage, findSectionForSlug, getAdjacentPages } from "@/lib/docs-nav"
 
 export function generateStaticParams() {
   return getAllDocSlugs().map((slug) => ({ slug: slug.split("/") }))
@@ -54,45 +54,86 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const page = findDocPage(slug)
   if (!page) notFound()
 
+  const section = findSectionForSlug(slug)
   const { body } = getDocSource(slug)
   const headings = extractHeadings(body)
   const { prev, next } = getAdjacentPages(slug)
 
   return (
-    <div className="flex gap-10">
+    <div className="flex gap-12 xl:gap-16">
       <article className="min-w-0 max-w-3xl flex-1">
+        {/* Breadcrumb */}
+        <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 font-mono text-xs text-white/50">
+          <Link href="/docs" className="transition-colors hover:text-white">
+            Docs
+          </Link>
+          {section && (
+            <>
+              <ChevronRight className="h-3 w-3 text-white/30" />
+              <span>{section.title}</span>
+            </>
+          )}
+          <ChevronRight className="h-3 w-3 text-white/30" />
+          <span className="text-[#eca8d6] font-medium">{page.title}</span>
+        </nav>
+
         <Reveal key={slug}>
           <DocContent markdown={body} />
         </Reveal>
 
-        <Reveal delay={150} className="mt-16 flex items-center justify-between gap-4 border-t border-border pt-8">
+        {/* Edit on GitHub link */}
+        <div className="mt-14 flex items-center justify-between border-t border-white/10 pt-6 text-xs text-white/40">
+          <span>Reviewed for Wizard v1.0.2</span>
+          <a
+            href={`https://github.com/Wizard-AIA/website/edit/main/content/docs/${slug}.md`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-white/50 transition-colors hover:text-white"
+          >
+            Edit this page on GitHub
+            <ExternalLink className="h-3 w-3" />
+          </a>
+        </div>
+
+        {/* Prev / Next navigation cards */}
+        <Reveal delay={100} className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
           {prev ? (
             <Link
               href={`/docs/${prev.slug}`}
-              className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+              className="group flex flex-col rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-all hover:border-[#eca8d6]/50 hover:bg-white/[0.04]"
             >
-              <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-              {prev.title}
+              <span className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-white/40 group-hover:text-[#eca8d6]">
+                <ArrowLeft className="h-3 w-3 transition-transform group-hover:-translate-x-1" />
+                Previous
+              </span>
+              <span className="mt-1.5 font-display text-sm font-medium text-white/90 group-hover:text-white">
+                {prev.title}
+              </span>
             </Link>
           ) : (
-            <span />
+            <div />
           )}
           {next ? (
             <Link
               href={`/docs/${next.slug}`}
-              className="group flex items-center gap-2 text-right text-sm text-muted-foreground hover:text-foreground"
+              className="group flex flex-col items-end text-right rounded-xl border border-white/10 bg-white/[0.02] p-4 transition-all hover:border-[#eca8d6]/50 hover:bg-white/[0.04]"
             >
-              {next.title}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <span className="inline-flex items-center gap-1 font-mono text-[11px] uppercase tracking-wider text-white/40 group-hover:text-[#eca8d6]">
+                Next
+                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
+              </span>
+              <span className="mt-1.5 font-display text-sm font-medium text-white/90 group-hover:text-white">
+                {next.title}
+              </span>
             </Link>
           ) : (
-            <span />
+            <div />
           )}
         </Reveal>
       </article>
 
-      <aside className="hidden w-56 shrink-0 xl:block">
-        <div className="sticky top-24">
+      <aside className="hidden w-60 shrink-0 xl:block">
+        <div className="sticky top-28">
           <DocsToc headings={headings} />
         </div>
       </aside>

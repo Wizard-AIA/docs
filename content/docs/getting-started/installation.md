@@ -2,7 +2,7 @@
 
 Wizard is designed to run entirely locally on your machine. You can install and run Wizard through pre-built standalone binaries, containerized via Docker Compose, or built directly from source.
 
-## 🍺 Option 1: Homebrew (macOS & Linux)
+## Option 1: Homebrew (macOS & Linux)
 
 The easiest way to install Wizard:
 
@@ -15,7 +15,7 @@ wizard start
 
 ---
 
-## ⚡ Option 2: Pre-built Binary Packages
+## Option 2: Pre-built Binary Packages
 
 No compiler, Go toolchain, or git clone required. Grab the zip for your
 platform — macOS (Apple Silicon or Intel), Linux (x86_64 or arm64), or
@@ -36,7 +36,7 @@ the current release.
 
 ---
 
-## 🐳 Option 2: Running with Docker Compose
+## Option 2: Running with Docker Compose
 
 If you prefer full containerization:
 
@@ -60,7 +60,7 @@ SANDBOX_TIER=full docker compose up --build -d   # adds survival analysis (lifel
 
 ---
 
-## 🛠️ Option 3: Building from Source
+## ️ Option 3: Building from Source
 
 To run directly from source without the prebuilt binary:
 
@@ -89,7 +89,7 @@ cd frontend && pnpm install && pnpm dev
 
 ---
 
-## 🧠 Model Setup
+## Model Setup
 
 You do **not** need to install a model before starting. Once the app is running:
 1. Navigate to **/models** in the web interface.
@@ -106,7 +106,7 @@ ollama pull embeddinggemma       # Semantic RAG embeddings (optional)
 
 ---
 
-## ⚠️ Platform Notes
+## ️ Platform Notes
 
 ### macOS Host Mode & OpenMP
 If you run `EXECUTION_BACKEND=host` on macOS and use machine learning packages (`xgboost`, `lightgbm`), install the OpenMP runtime library:

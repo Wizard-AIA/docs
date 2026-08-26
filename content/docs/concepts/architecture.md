@@ -4,7 +4,7 @@ Wizard operates on an **autonomous iterative feedback loop** rather than a one-s
 
 ---
 
-## 🏛️ High-Level System Architecture
+## ️ High-Level System Architecture
 
 The Next.js client and the FastAPI backend talk over one streaming WebSocket
 (`/ws/chat`), typed event frames in both directions. Each message enters a
@@ -22,7 +22,7 @@ verified report.
 
 ---
 
-## 🧠 Dual-Model Execution Roles
+## Dual-Model Execution Roles
 
 1. **Manager Role (`MODEL_NAME`):**
    - Directs the investigation strategy.
@@ -41,7 +41,7 @@ verified report.
 
 ---
 
-## ⚖️ The Evidence-Backed Control Plane
+## ️ The Evidence-Backed Control Plane
 
 Wizard incorporates multi-layered verification to ensure statistical soundness:
 
@@ -59,7 +59,7 @@ Silent code decisions — such as dropped null values, inner join data loss, coe
 
 ---
 
-## 🛡️ Sandboxing & Execution Isolation
+## ️ Sandboxing & Execution Isolation
 
 Generated Python code runs in strictly bounded environments:
 
