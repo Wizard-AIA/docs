@@ -4,9 +4,12 @@ import { ArrowRight } from "lucide-react"
 import { Reveal } from "@/components/reveal"
 
 export const metadata: Metadata = {
-  title: "Wizard Docs",
+  title: "Documentation",
   description:
-    "A local-first autonomous data analysis agent. Investigates, executes real code in secure sandboxes, self-corrects on errors, and independently verifies conclusions.",
+    "Official documentation for Wizard: architecture, task routing, local Ollama/DeepSeek setup, sandboxing, data connectors, and troubleshooting.",
+  alternates: {
+    canonical: "/docs",
+  },
 }
 
 const sections = [

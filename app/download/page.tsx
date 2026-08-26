@@ -10,8 +10,11 @@ import { Reveal } from "@/components/reveal"
 import { getLatestRelease, assetForSuffix, formatBytes, PLATFORMS, CODESPACES_URL, DOCS_URL } from "@/lib/wizard"
 
 export const metadata: Metadata = {
-  title: "Download — Wizard",
-  description: "Download Wizard for macOS, Linux or Windows — Homebrew, a standalone zip, Docker, or GitHub Codespaces.",
+  title: "Download",
+  description: "Download Wizard for macOS, Linux, and Windows — 1-line Homebrew installation, standalone zip bundles, Docker compose, or GitHub Codespaces.",
+  alternates: {
+    canonical: "/download",
+  },
 }
 
 export const revalidate = 3600

@@ -7,8 +7,11 @@ import { Reveal } from "@/components/reveal"
 import { DOCS_URL } from "@/lib/wizard"
 
 export const metadata: Metadata = {
-  title: "CLI reference — Wizard",
-  description: "The full wizard CLI subcommand reference, setup recipes and configuration table.",
+  title: "CLI Reference",
+  description: "Complete command-line interface guide for Wizard: init, start, stop, doctor, status, and skill management subcommands.",
+  alternates: {
+    canonical: "/cli",
+  },
 }
 
 const CLI_COMMANDS = [

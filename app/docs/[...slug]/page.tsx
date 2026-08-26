@@ -25,8 +25,26 @@ export async function generateMetadata({
   const slug = slugFromParams(slugParts)
   const page = findDocPage(slug)
   if (!page) return {}
+
+  const { body } = getDocSource(slug)
+  const description =
+    body
+      .split("\n")
+      .find((line) => line.trim().length > 20 && !line.startsWith("#") && !line.startsWith("```"))
+      ?.slice(0, 160)
+      ?.trim() || `${page.title} — Official Wizard documentation guide.`
+
   return {
-    title: `${page.title} — Wizard Docs`,
+    title: page.title,
+    description,
+    alternates: {
+      canonical: `/docs/${slug}`,
+    },
+    openGraph: {
+      title: `${page.title} · Wizard Documentation`,
+      description,
+      url: `https://wizardw2.vercel.app/docs/${slug}`,
+    },
   }
 }
 

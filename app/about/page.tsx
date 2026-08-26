@@ -8,8 +8,11 @@ import { Reveal } from "@/components/reveal"
 import { REPO_URL } from "@/lib/wizard"
 
 export const metadata: Metadata = {
-  title: "About — Wizard",
-  description: "What Wizard is, how it's licensed, how to contribute, and how the project handles security and conduct.",
+  title: "About",
+  description: "Learn about Wizard: the local-first autonomous AI data analyst, its architecture, open-source BSD-3-Clause license, and creator.",
+  alternates: {
+    canonical: "/about",
+  },
 }
 
 function GitHubLink({ href, children }: { href: string; children: ReactNode }) {

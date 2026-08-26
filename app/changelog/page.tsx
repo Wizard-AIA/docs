@@ -7,8 +7,11 @@ import { RELEASES, type Release } from "@/lib/changelog"
 import { REPO_URL } from "@/lib/wizard"
 
 export const metadata: Metadata = {
-  title: "Changelog — Wizard",
-  description: "Every notable change and milestone across Wizard releases.",
+  title: "Changelog & Releases",
+  description: "Explore the release history, new features, model integrations, and performance improvements in Wizard.",
+  alternates: {
+    canonical: "/changelog",
+  },
 }
 
 const KIND_META: Record<Release["kind"], { label: string; icon: typeof Rocket }> = {
