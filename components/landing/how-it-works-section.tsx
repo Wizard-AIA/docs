@@ -89,8 +89,8 @@ export function HowItWorksSection() {
             </h2>
           </div>
 
-          {/* Image cerisier — se colle en bas sur les blocs */}
-          <div className={`relative h-[320px] lg:h-[640px] overflow-hidden transition-all duration-1000 delay-200 ${
+          {/* Image cerisier — desktop only for clean vertical rhythm on mobile */}
+          <div className={`hidden md:block relative h-[320px] lg:h-[640px] overflow-hidden transition-all duration-1000 delay-200 ${
             isVisible ? "opacity-100" : "opacity-0"
           }`}>
             <img
@@ -105,7 +105,7 @@ export function HowItWorksSection() {
         </div>
 
         {/* Horizontal Steps Layout */}
-        <div className="grid lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8 md:mt-0">
           {steps.map((step, index) => (
             <button
               key={step.number}

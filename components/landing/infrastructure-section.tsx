@@ -159,11 +159,11 @@ export function InfrastructureSection() {
             </div>
             
             <div className="relative z-10">
-              <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-8xl lg:text-[10rem] font-display leading-none">3</span>
-                <span className="text-2xl text-muted-foreground">execution backends</span>
+              <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-4">
+                <span className="text-7xl sm:text-8xl lg:text-[10rem] font-display leading-none">3</span>
+                <span className="text-xl sm:text-2xl text-muted-foreground">execution backends</span>
               </div>
-              <p className="text-muted-foreground max-w-md">
+              <p className="text-muted-foreground text-sm sm:text-base max-w-md">
                 <code className="text-foreground">host</code> — a sandboxed subprocess, the default.{" "}
                 <code className="text-foreground">docker</code> — a container per session, opt-in.{" "}
                 <code className="text-foreground">inprocess</code> — used only when spawning is forbidden.
@@ -172,46 +172,46 @@ export function InfrastructureSection() {
           </div>
 
           {/* Stacked stat cards */}
-          <div className="flex flex-col gap-6">
-            <div className={`p-8 border border-foreground/10 bg-foreground/[0.02] transition-all duration-700 delay-100 ${
+          <div className="flex flex-col gap-4 sm:gap-6">
+            <div className={`p-6 sm:p-8 border border-foreground/10 bg-foreground/[0.02] transition-all duration-700 delay-100 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
-              <span className="text-5xl lg:text-6xl font-display">4</span>
+              <span className="text-4xl sm:text-5xl lg:text-6xl font-display">4</span>
               <span className="block text-sm text-muted-foreground mt-2">Layers of containment</span>
             </div>
 
-            <div className={`p-8 border border-foreground/10 bg-foreground/[0.02] transition-all duration-700 delay-200 ${
+            <div className={`p-6 sm:p-8 border border-foreground/10 bg-foreground/[0.02] transition-all duration-700 delay-200 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
-              <span className="text-5xl lg:text-6xl font-display">9.5/10</span>
+              <span className="text-4xl sm:text-5xl lg:text-6xl font-display">9.5/10</span>
               <span className="block text-sm text-muted-foreground mt-2">OpenSSF Scorecard</span>
             </div>
           </div>
         </div>
 
         {/* Sandbox mechanism list */}
-        <div className={`mt-12 grid grid-cols-2 lg:grid-cols-4 gap-4 transition-all duration-1000 delay-300 ${
+        <div className={`mt-8 sm:mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 transition-all duration-1000 delay-300 ${
           isVisible ? "opacity-100" : "opacity-0"
         }`}>
           {regions.map((region, index) => (
             <div
               key={region.name}
-              className={`p-6 border transition-all duration-300 cursor-default ${
+              className={`p-4 sm:p-6 border transition-all duration-300 cursor-default ${
                 activeRegion === index 
                   ? "border-foreground/30 bg-foreground/[0.04]" 
                   : "border-foreground/10"
               }`}
             >
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-2 sm:mb-3">
                 <span className={`w-2 h-2 rounded-full transition-colors ${
                   activeRegion === index ? "bg-[#eca8d6]" : "bg-foreground/20"
                 }`} />
-                <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">
+                <span className="text-[10px] sm:text-xs font-mono text-muted-foreground uppercase tracking-wider">
                   {region.status}
                 </span>
               </div>
-              <span className="font-medium block mb-1">{region.name}</span>
-              <span className="text-sm text-muted-foreground">{region.nodes}</span>
+              <span className="font-medium text-sm sm:text-base block mb-0.5 sm:mb-1">{region.name}</span>
+              <span className="text-xs sm:text-sm text-muted-foreground">{region.nodes}</span>
             </div>
           ))}
         </div>

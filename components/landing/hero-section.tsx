@@ -167,24 +167,24 @@ export function HeroSection() {
         ))}
       </div>
       
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 pt-32 pb-16 lg:py-40 flex flex-col min-h-screen justify-between">
-        <div className="lg:max-w-[65%]">
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 pt-28 pb-16 sm:pt-36 sm:pb-24 lg:py-40 flex flex-col min-h-screen justify-center">
+        <div className="w-full lg:max-w-[70%]">
           {/* Eyebrow */}
           <div 
-            className={`mb-6 sm:mb-8 transition-all duration-700 ${
+            className={`mb-5 sm:mb-8 transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            <span className="inline-flex items-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-mono text-white/70">
-              <span className="w-6 sm:w-8 h-px bg-[#eca8d6]" />
+            <span className="inline-flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono text-white/80">
+              <span className="w-5 sm:w-8 h-px bg-[#eca8d6]" />
               Local-first autonomous data analysis
             </span>
           </div>
           
           {/* Main headline */}
-          <div className="mb-8 sm:mb-12">
+          <div className="mb-6 sm:mb-10">
             <h1 
-              className={`text-left text-[clamp(2.4rem,6.5vw,6.5rem)] font-display leading-[0.96] tracking-tight text-white transition-all duration-1000 ${
+              className={`text-left text-[clamp(2.2rem,6.2vw,6.5rem)] font-display leading-[0.96] tracking-tight text-white transition-all duration-1000 ${
                 isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
               }`}
             >
@@ -197,23 +197,30 @@ export function HeroSection() {
               </span>
             </h1>
           </div>
-        </div>
 
-        {/* Install command — flows naturally on mobile, centered at bottom on desktop */}
-        <div
-          className={`w-full max-w-[620px] transition-all duration-700 delay-300 mt-4 lg:mt-8 ${
+          {/* Subtitle on mobile & desktop */}
+          <p className={`text-sm sm:text-base md:text-lg text-white/60 leading-relaxed max-w-xl mb-8 sm:mb-10 transition-all duration-1000 delay-150 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-          }`}
-        >
-          <div className="flex flex-col items-start gap-3">
-            <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard" />
-            <Link
-              href="/download"
-              className="group inline-flex items-center gap-1.5 text-xs sm:text-sm text-white/50 hover:text-white transition-colors pl-1"
-            >
-              Other platforms &amp; Docker
-              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-            </Link>
+          }`}>
+            An agent that runs sandboxed Python, inspects results, self-corrects tracebacks, and verifies its own findings — locally on your machine.
+          </p>
+
+          {/* Install command */}
+          <div
+            className={`w-full max-w-[620px] transition-all duration-700 delay-300 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
+          >
+            <div className="flex flex-col items-start gap-3">
+              <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard" />
+              <Link
+                href="/download"
+                className="group inline-flex items-center gap-1.5 text-xs sm:text-sm text-white/50 hover:text-white transition-colors pl-1"
+              >
+                Other platforms &amp; Docker
+                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+              </Link>
+            </div>
           </div>
         </div>
       </div>

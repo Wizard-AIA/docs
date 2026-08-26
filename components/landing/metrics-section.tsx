@@ -253,7 +253,7 @@ export function MetricsSection() {
               </span>
             </div>
 
-            <h2 className={`text-6xl md:text-7xl lg:text-[140px] font-display tracking-tight leading-[0.95] transition-all duration-1000 ${
+            <h2 className={`text-[clamp(2.2rem,6vw,7.5rem)] font-display tracking-tight leading-[0.92] transition-all duration-1000 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
             }`}>
               Numbers you
