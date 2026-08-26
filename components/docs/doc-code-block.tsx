@@ -23,12 +23,12 @@ export function DocCodeBlock({ code, language }: { code: string; language: strin
   const lines = code.split("\n")
 
   return (
-    <div className="group relative my-6 overflow-hidden rounded-xl border border-white/10 bg-black/80 shadow-md backdrop-blur">
+    <div className="group relative my-6 w-full max-w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-black/80 shadow-md backdrop-blur">
       {/* Code Header Bar */}
-      <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-mono">
+      <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.03] px-3.5 sm:px-4 py-2 text-xs font-mono">
         <div className="flex items-center gap-2 text-white/50">
           {isShell ? <Terminal className="h-3.5 w-3.5 text-[#eca8d6]" /> : null}
-          <span className="uppercase tracking-wider text-[11px] font-semibold text-white/60">
+          <span className="uppercase tracking-wider text-[10px] sm:text-[11px] font-semibold text-white/60">
             {language}
           </span>
         </div>
@@ -54,7 +54,7 @@ export function DocCodeBlock({ code, language }: { code: string; language: strin
       </div>
 
       {/* Code Body */}
-      <div className="overflow-x-auto p-4 text-[13.5px] font-mono leading-relaxed text-white/90">
+      <div className="w-full max-w-full overflow-x-auto p-3.5 sm:p-4 text-[12.5px] sm:text-[13.5px] font-mono leading-relaxed text-white/90">
         <pre className="whitespace-pre">
           <code>
             {lines.map((line, idx) => {

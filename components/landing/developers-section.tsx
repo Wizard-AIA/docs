@@ -70,7 +70,7 @@ export function DevelopersSection() {
             <span className="w-8 h-px bg-foreground/30" />
             Under the hood
           </span>
-          <h2 className="text-6xl md:text-7xl lg:text-[128px] font-display tracking-tight leading-[0.9]">
+          <h2 className="text-[clamp(2.2rem,6vw,7.5rem)] font-display tracking-tight leading-[0.92]">
             A REST API.
             <br />
             <span className="text-muted-foreground">And a WebSocket.</span>

@@ -26,7 +26,7 @@ export function HeroTerminal({
 
   return (
     <div
-      className="group relative overflow-hidden rounded-xl border border-white/10 bg-black/70 backdrop-blur-md shadow-[0_0_60px_-20px_rgba(236,168,214,0.35)] transition-shadow duration-500 hover:shadow-[0_0_70px_-15px_rgba(236,168,214,0.5)]"
+      className="group relative w-full max-w-full min-w-0 overflow-hidden rounded-xl border border-white/10 bg-black/70 backdrop-blur-md shadow-[0_0_60px_-20px_rgba(236,168,214,0.35)] transition-shadow duration-500 hover:shadow-[0_0_70px_-15px_rgba(236,168,214,0.5)]"
     >
       {/* Ambient gradient wash */}
       <div
@@ -38,21 +38,21 @@ export function HeroTerminal({
       />
 
       {/* Title bar */}
-      <div className="relative flex items-center gap-2 border-b border-white/10 px-4 py-2.5">
+      <div className="relative flex items-center gap-2 border-b border-white/10 px-3.5 sm:px-4 py-2 sm:py-2.5">
         <div className="flex gap-1.5">
           <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
           <span className="h-2.5 w-2.5 rounded-full bg-white/15" />
         </div>
-        <span className="ml-2 font-mono text-[11px] text-white/30">{label}</span>
+        <span className="ml-2 font-mono text-[10px] sm:text-[11px] text-white/30">{label}</span>
       </div>
 
       {/* Body */}
-      <div className={`relative flex items-center gap-3 ${size === "sm" ? "px-4 py-3" : "px-5 py-4"}`}>
-        <span className="select-none font-mono text-[#eca8d6]" aria-hidden="true">
+      <div className={`relative flex items-center gap-2 sm:gap-3 ${size === "sm" ? "px-3.5 py-2.5 sm:px-4 sm:py-3" : "px-3.5 py-3 sm:px-5 sm:py-4"}`}>
+        <span className="select-none font-mono text-[#eca8d6] text-xs sm:text-sm shrink-0" aria-hidden="true">
           $
         </span>
-        <code className={`flex-1 overflow-x-auto whitespace-nowrap font-mono text-white/90 ${size === "sm" ? "text-sm" : "text-base"}`}>
+        <code className="min-w-0 flex-1 overflow-x-auto whitespace-nowrap font-mono text-[12px] sm:text-sm md:text-base text-white/90 scrollbar-none">
           {command}
           <span className="ml-0.5 inline-block h-[1.1em] w-[2px] translate-y-[0.15em] animate-[blink_1.1s_steps(1)_infinite] bg-[#eca8d6] align-middle" />
         </code>

@@ -84,89 +84,96 @@ export function Navigation() {
 
           {/* Mobile Menu Button */}
           <button
+            type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className={`md:hidden p-2 transition-colors duration-500 ${isScrolled || isMobileMenuOpen ? "text-foreground" : "text-white"}`}
-            aria-label="Toggle menu"
+            className="md:hidden flex items-center justify-center p-2.5 rounded-xl bg-white/10 border border-white/20 text-white backdrop-blur-md shadow-sm transition-all hover:bg-white/20 active:scale-95"
+            aria-label="Toggle navigation menu"
           >
             {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 text-white" />
             ) : (
-              <Menu className="w-6 h-6" />
+              <Menu className="w-5 h-5 text-white" />
             )}
           </button>
         </div>
-
       </nav>
       
       {/* Mobile Menu - Full Screen Overlay */}
       <div
-        className={`md:hidden fixed inset-0 bg-background z-40 transition-all duration-500 ${
+        className={`md:hidden fixed inset-0 bg-black/95 backdrop-blur-2xl z-50 transition-all duration-300 overflow-y-auto ${
           isMobileMenuOpen 
             ? "opacity-100 pointer-events-auto" 
             : "opacity-0 pointer-events-none"
         }`}
-        style={{ top: 0 }}
       >
-        <div className="flex flex-col h-full px-8 pt-28 pb-8">
+        <div className="min-h-full flex flex-col justify-between p-6 pt-24 pb-12 max-w-md mx-auto">
+          {/* Close button at top-right */}
+          <div className="absolute top-6 right-6">
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="p-2.5 rounded-xl bg-white/10 border border-white/20 text-white backdrop-blur-md transition-colors hover:bg-white/20"
+              aria-label="Close menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+
           {/* Navigation Links */}
-          <div className="flex-1 flex flex-col justify-center gap-8">
+          <div className="flex flex-col gap-4 my-auto py-8">
             {navLinks.map((link, i) => (
               <Link
                 key={link.name}
                 href={link.href}
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`text-5xl font-display text-foreground hover:text-muted-foreground transition-all duration-500 ${
-                  isMobileMenuOpen 
-                    ? "opacity-100 translate-y-0" 
-                    : "opacity-0 translate-y-4"
-                }`}
-                style={{ transitionDelay: isMobileMenuOpen ? `${i * 75}ms` : "0ms" }}
+                className="text-2xl sm:text-3xl font-display font-medium text-white/90 hover:text-[#eca8d6] transition-colors py-1.5"
               >
                 {link.name}
               </Link>
             ))}
+            <div className="h-px bg-white/10 my-2" />
+            <Link
+              href="/docs"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-xl font-display text-white/70 hover:text-white transition-colors"
+            >
+              Documentation
+            </Link>
+            <Link
+              href="/cli"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-xl font-display text-white/70 hover:text-white transition-colors"
+            >
+              CLI Guide
+            </Link>
+            <Link
+              href="/changelog"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-xl font-display text-white/70 hover:text-white transition-colors"
+            >
+              Changelog
+            </Link>
           </div>
           
           {/* Bottom CTAs */}
-          <div className={`flex gap-4 pt-8 border-t border-foreground/10 transition-all duration-500 ${
-            isMobileMenuOpen 
-              ? "opacity-100 translate-y-0" 
-              : "opacity-0 translate-y-4"
-          }`}
-          style={{ transitionDelay: isMobileMenuOpen ? "300ms" : "0ms" }}
-          >
+          <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/10">
             <Button
               asChild
               variant="outline"
-              className="flex-1 rounded-full h-14 text-base"
+              className="w-full rounded-xl h-12 text-sm border-white/20 bg-white/5 text-white hover:bg-white/10"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <a href="https://github.com/Wizard-AIA/Wizard-w2" target="_blank" rel="noreferrer">GitHub</a>
+              <a href="https://github.com/Wizard-AIA/Wizard-w2" target="_blank" rel="noreferrer">
+                GitHub Repository
+              </a>
             </Button>
             <Button
               asChild
-              className="flex-1 bg-foreground text-background rounded-full h-14 text-base"
+              className="w-full bg-white text-black hover:bg-white/90 rounded-xl h-12 text-sm font-medium"
               onClick={() => setIsMobileMenuOpen(false)}
             >
-              <Link href="/download">Download</Link>
+              <Link href="/download">Download Wizard</Link>
             </Button>
-          </div>
-
-          <div
-            className={`pt-6 text-sm text-muted-foreground transition-all duration-500 flex items-center gap-6 ${
-              isMobileMenuOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-            style={{ transitionDelay: isMobileMenuOpen ? "350ms" : "0ms" }}
-          >
-            <Link href="/docs" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-foreground">
-              Docs
-            </Link>
-            <Link href="/cli" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-foreground">
-              CLI
-            </Link>
-            <Link href="/changelog" onClick={() => setIsMobileMenuOpen(false)} className="hover:text-foreground">
-              Changelog
-            </Link>
           </div>
         </div>
       </div>

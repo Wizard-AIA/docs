@@ -19,9 +19,9 @@ export function CopyCommand({ command, lines }: { command?: string; lines?: stri
   }
 
   return (
-    <div className="group relative flex items-start gap-3 rounded-lg border border-white/10 bg-black px-4 py-3 font-mono text-sm text-white/90">
-      <span className="mt-0.5 select-none text-white/30" aria-hidden="true">$</span>
-      <pre className="flex-1 overflow-x-auto whitespace-pre-wrap break-all leading-relaxed">
+    <div className="group relative w-full max-w-full min-w-0 flex items-start gap-2.5 sm:gap-3 rounded-lg border border-white/10 bg-black px-3.5 sm:px-4 py-3 font-mono text-xs sm:text-sm text-white/90">
+      <span className="mt-0.5 select-none text-white/30 shrink-0" aria-hidden="true">$</span>
+      <pre className="min-w-0 flex-1 overflow-x-auto whitespace-pre-wrap break-words leading-relaxed font-mono">
         {displayLines.map((line, i) => (
           <div key={i}>{line}</div>
         ))}

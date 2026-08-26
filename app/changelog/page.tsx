@@ -30,22 +30,22 @@ export default function ChangelogPage() {
       <Navigation />
 
       {/* Header */}
-      <section className="relative pt-40 pb-24 lg:pt-48 lg:pb-32">
+      <section className="relative pt-32 sm:pt-40 pb-20 lg:pt-48 lg:pb-32">
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-[0.15]">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="absolute h-px bg-white/20" style={{ top: `${16.6 * (i + 1)}%`, left: 0, right: 0 }} />
           ))}
         </div>
-        <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12">
+        <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12">
           <Reveal>
-            <span className="inline-flex items-center gap-3 text-sm font-mono text-white/50 mb-8">
-              <span className="w-8 h-px bg-white/30" />
+            <span className="inline-flex items-center gap-3 text-xs sm:text-sm font-mono text-white/50 mb-6 sm:mb-8">
+              <span className="w-6 sm:w-8 h-px bg-white/30" />
               Every shipped change
             </span>
-            <h1 className="text-6xl md:text-7xl lg:text-[110px] font-display tracking-tight leading-[0.9]">
+            <h1 className="text-[clamp(2.5rem,7vw,7rem)] font-display tracking-tight leading-[0.92]">
               Change<span className="text-stroke">log.</span>
             </h1>
-            <p className="mt-8 max-w-lg text-white/50 text-lg">
+            <p className="mt-6 sm:mt-8 max-w-lg text-white/50 text-base sm:text-lg">
               What shipped, when, and why — kept here instead of buried in commit history.
             </p>
           </Reveal>

@@ -167,59 +167,56 @@ export function HeroSection() {
         ))}
       </div>
       
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-6 lg:px-12 py-32 lg:py-40">
-        <div className="lg:max-w-[55%]">
-        {/* Eyebrow */}
-        <div 
-          className={`mb-8 transition-all duration-700 ${
+      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 pt-32 pb-16 lg:py-40 flex flex-col min-h-screen justify-between">
+        <div className="lg:max-w-[65%]">
+          {/* Eyebrow */}
+          <div 
+            className={`mb-6 sm:mb-8 transition-all duration-700 ${
+              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+            }`}
+          >
+            <span className="inline-flex items-center gap-2.5 sm:gap-3 text-xs sm:text-sm font-mono text-white/70">
+              <span className="w-6 sm:w-8 h-px bg-[#eca8d6]" />
+              Local-first autonomous data analysis
+            </span>
+          </div>
+          
+          {/* Main headline */}
+          <div className="mb-8 sm:mb-12">
+            <h1 
+              className={`text-left text-[clamp(2.4rem,6.5vw,6.5rem)] font-display leading-[0.96] tracking-tight text-white transition-all duration-1000 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
+              }`}
+            >
+              <span className="block">Ask your data,</span>
+              <span className="block">
+                watch it{" "}
+                <span className="relative inline-block">
+                  <BlurWord word={words[wordIndex]} trigger={wordIndex} />
+                </span>
+              </span>
+            </h1>
+          </div>
+        </div>
+
+        {/* Install command — flows naturally on mobile, centered at bottom on desktop */}
+        <div
+          className={`w-full max-w-[620px] transition-all duration-700 delay-300 mt-4 lg:mt-8 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}
         >
-          <span className="inline-flex items-center gap-3 text-sm font-mono text-white/60">
-            <span className="w-8 h-px bg-white/30" />
-            Local-first autonomous data analysis
-          </span>
-        </div>
-        
-        {/* Main headline */}
-        <div className="mb-12">
-          <h1 
-            className={`text-left text-[clamp(2rem,6vw,7rem)] font-display leading-[0.92] tracking-tight text-white transition-all duration-1000 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
-            }`}
-          >
-            <span className="block whitespace-nowrap">Ask your data,</span>
-            <span className="block whitespace-nowrap">
-              watch it{" "}
-              <span className="relative inline-block">
-                <BlurWord word={words[wordIndex]} trigger={wordIndex} />
-              </span>
-            </span>
-          </h1>
-        </div>
+          <div className="flex flex-col items-start gap-3">
+            <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard" />
+            <Link
+              href="/download"
+              className="group inline-flex items-center gap-1.5 text-xs sm:text-sm text-white/50 hover:text-white transition-colors pl-1"
+            >
+              Other platforms &amp; Docker
+              <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+            </Link>
+          </div>
         </div>
       </div>
-      
-      {/* Install command — centered */}
-      <div
-        className={`absolute bottom-12 left-0 right-0 px-6 lg:px-12 transition-all duration-700 delay-500 flex justify-center ${
-          isVisible ? "opacity-100" : "opacity-0"
-        }`}
-      >
-        <div className="w-full max-w-[620px] mx-auto flex flex-col items-center justify-center gap-3 text-center">
-          <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard" />
-          <Link
-            href="/download"
-            className="group inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"
-          >
-            Other platforms &amp; Docker
-            <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
-      </div>
-
-      {/* Scroll indicator */}
-
     </section>
   );
 }

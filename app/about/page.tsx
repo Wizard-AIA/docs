@@ -34,13 +34,13 @@ export default function AboutPage() {
     <main className="relative min-h-screen overflow-x-hidden">
       <Navigation />
 
-      <section className="max-w-[760px] mx-auto px-6 lg:px-12 pt-40 pb-24">
+      <section className="max-w-[760px] mx-auto px-4 sm:px-6 lg:px-12 pt-32 sm:pt-40 pb-24">
         <Reveal>
-          <span className="inline-flex items-center gap-3 text-sm font-mono text-muted-foreground mb-6">
-            <span className="w-8 h-px bg-foreground/30" />
+          <span className="inline-flex items-center gap-3 text-xs sm:text-sm font-mono text-muted-foreground mb-6">
+            <span className="w-6 sm:w-8 h-px bg-foreground/30" />
             About
           </span>
-          <h1 className="text-5xl md:text-6xl font-display tracking-tight mb-6">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display tracking-tight mb-6">
             Built in the open.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">

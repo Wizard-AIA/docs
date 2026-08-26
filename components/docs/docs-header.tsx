@@ -23,11 +23,12 @@ export function DocsHeader({ entries }: { entries: DocSearchEntry[] }) {
       <div className="mx-auto flex h-14 max-w-[1600px] items-center justify-between gap-4 px-4 lg:px-8">
         <div className="flex min-w-0 items-center gap-4">
           <button
+            type="button"
             onClick={() => setMobileOpen(true)}
-            className="p-1.5 text-foreground/70 hover:text-foreground lg:hidden"
-            aria-label="Open navigation"
+            className="flex items-center justify-center p-2 rounded-lg border border-border bg-secondary/60 text-foreground shadow-sm transition-all hover:bg-secondary active:scale-95 lg:hidden"
+            aria-label="Open docs navigation"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-4 w-4" />
           </button>
           <Link href="/" className="flex shrink-0 items-baseline gap-1.5">
             <span className="font-display text-lg tracking-tight text-foreground">Wizard</span>
@@ -53,15 +54,13 @@ export function DocsHeader({ entries }: { entries: DocSearchEntry[] }) {
           </div>
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-4">
-          <div className="hidden sm:block">
-            <DocsSearchTrigger entries={entries} />
-          </div>
+        <div className="flex items-center justify-end gap-2 sm:gap-4">
+          <DocsSearchTrigger entries={entries} />
           <a
             href={REPO_URL}
             target="_blank"
             rel="noreferrer"
-            className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="text-xs sm:text-sm text-muted-foreground transition-colors hover:text-foreground hidden sm:inline-block"
           >
             GitHub
           </a>
