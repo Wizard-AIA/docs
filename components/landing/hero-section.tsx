@@ -207,7 +207,7 @@ export function HeroSection() {
         }`}
       >
         <div className="max-w-[1400px] mx-auto flex flex-col items-start gap-3 lg:max-w-[520px]">
-          <HeroTerminal command="brew install Wizard-AIA/wizard/wizard" />
+          <HeroTerminal command="brew install wizard" />
           <Link
             href="/download"
             className="group inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors"

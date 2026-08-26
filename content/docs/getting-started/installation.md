@@ -2,9 +2,19 @@
 
 Wizard is designed to run entirely locally on your machine. You can install and run Wizard through pre-built standalone binaries, containerized via Docker Compose, or built directly from source.
 
+## 🍺 Option 1: Homebrew (macOS & Linux)
+
+The easiest way to install Wizard:
+
+```bash
+brew install wizard
+wizard init
+wizard start
+```
+
 ---
 
-## ⚡ Option 1: Pre-built Binary Packages (Recommended)
+## ⚡ Option 2: Pre-built Binary Packages
 
 No compiler, Go toolchain, or git clone required. Grab the zip for your
 platform — macOS (Apple Silicon or Intel), Linux (x86_64 or arm64), or

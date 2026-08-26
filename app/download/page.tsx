@@ -70,7 +70,7 @@ export default async function DownloadPage() {
 
         {/* Primary CTA — one command, front and center */}
         <Reveal delay={100} className="mt-12">
-          <HeroTerminal command="brew install Wizard-AIA/wizard/wizard && wizard init && wizard start" label="macOS / Linux — Homebrew" />
+          <HeroTerminal command="brew install wizard && wizard init && wizard start" label="macOS / Linux — Homebrew" />
         </Reveal>
 
         {/* Prerequisites */}
