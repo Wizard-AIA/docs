@@ -13,7 +13,10 @@ actually read what you're installing.
 you read it → you approve it.** Nothing is available to the agent between
 staging and your explicit approval.
 
-1. **Parse.** A repository URL or a gist URL/id.
+1. **Parse.** A repository URL or a gist URL/id (e.g. `Wizard-AIA/skills` or full GitHub URL):
+   ```bash
+   ./cli/wizard skills add Wizard-AIA/skills
+   ```
 2. **Pin.** The ref is resolved to a single commit SHA once, and every
    later request for that install carries the same SHA — so a moving branch
    can't be read across two requests and assembled into a "pinned" version

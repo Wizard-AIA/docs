@@ -1,11 +1,38 @@
 # Installation
 
-## Prerequisites
+Wizard is designed to run entirely locally on your machine. You can install and run Wizard through pre-built standalone binaries, containerized via Docker Compose, or built directly from source.
 
-- [Ollama](https://ollama.com/) or [LM Studio](#using-lm-studio-instead-of-or-alongside-ollama) — any two local models work; nothing in Wizard is tied to a particular pair.
-- [Docker Desktop](https://www.docker.com/products/docker-desktop/) — recommended, **not required**. See [Running without Docker](#running-without-docker).
+---
 
-## With Docker
+## ⚡ Option 1: Pre-built Binary Packages (Recommended)
+
+No compiler, Go toolchain, or git clone required. Download the pre-packaged zip for your platform:
+
+| Platform | Architecture | Release Package |
+|---|---|---|
+| **macOS** | Apple Silicon (M1 / M2 / M3 / M4) | [**`Wizard-v1.0.1-darwin-arm64.zip`**](https://github.com/Wizard-AIA/Wizard-w2/releases/latest) |
+| **macOS** | Intel x86_64 | [**`Wizard-v1.0.1-darwin-amd64.zip`**](https://github.com/Wizard-AIA/Wizard-w2/releases/latest) |
+| **Linux** | x86_64 / amd64 | [**`Wizard-v1.0.1-linux-amd64.zip`**](https://github.com/Wizard-AIA/Wizard-w2/releases/latest) |
+| **Linux** | ARM64 / aarch64 | [**`Wizard-v1.0.1-linux-arm64.zip`**](https://github.com/Wizard-AIA/Wizard-w2/releases/latest) |
+| **Windows** | x86_64 | [**`Wizard-v1.0.1-windows-amd64.zip`**](https://github.com/Wizard-AIA/Wizard-w2/releases/latest) |
+
+### Quick Start with CLI
+
+1. Extract the downloaded zip file into any folder.
+2. In your terminal, initialize and start the service:
+
+```bash
+./cli/wizard init       # Checks Python 3.12+/Node 20+ and installs dependencies
+./cli/wizard start      # Launches backend + frontend daemon and opens your browser
+```
+
+3. Open **http://localhost:3000** in your browser.
+
+---
+
+## 🐳 Option 2: Running with Docker Compose
+
+If you prefer full containerization:
 
 ```bash
 git clone https://github.com/Wizard-AIA/Wizard-w2.git
@@ -13,94 +40,73 @@ cd Wizard-w2
 docker compose up --build -d
 ```
 
-Open **http://localhost:3000**. API docs are at **http://localhost:8000/docs**.
+Open **http://localhost:3000**. API documentation is available at **http://localhost:8000/docs**.
 
-You do not need to install a model first — go to **/models** and use
-*Install a model*. Starter picks are offered per provider, downloads show
-progress in the page, and nothing sends you to a terminal or the LM Studio
-window.
+### Sandbox Tier Sizing
 
-If you'd rather use a terminal:
+The sandbox container image ships in three toolkit tiers:
 
 ```bash
-ollama pull qwen3:8b             # reasoning
-ollama pull qwen2.5-coder:7b     # code
+SANDBOX_TIER=core docker compose up --build -d   # pandas, numpy, pyarrow, duckdb, polars, matplotlib, openpyxl (default)
+SANDBOX_TIER=standard docker compose up --build -d   # adds scikit-learn, statsmodels, scipy, seaborn
+SANDBOX_TIER=full docker compose up --build -d   # adds survival analysis (lifelines) and geospatial (geopandas)
 ```
 
-Optionally `ollama pull embeddinggemma` (or `nomic-embed-text`) for semantic
-retrieval — without one, matching falls back to word overlap.
+---
 
-## Disk space
+## 🛠️ Option 3: Building from Source
 
-The sandbox image ships in tiers. `standard` is the default; pick a smaller
-one if you're tight on space — the agent is simply told about a smaller
-toolkit rather than writing code that then fails to import.
+To run directly from source without the prebuilt binary:
 
 ```bash
-SANDBOX_TIER=core docker compose up --build -d   # pandas, numpy, pyarrow, duckdb, matplotlib, openpyxl
-SANDBOX_TIER=full docker compose up --build -d   # adds survival analysis and geospatial
+git clone https://github.com/Wizard-AIA/Wizard-w2.git
+cd Wizard-w2
+
+# Build the CLI binary
+cd cli && go build -o wizard ./cmd/wizard && cd ..
+
+# Initialize and start
+./cli/wizard init
+./cli/wizard start
 ```
 
-## Running without Docker
-
-The `wizard` CLI is a single static binary that automates the steps below —
-checks prerequisites, installs dependencies, and manages the backend/frontend
-as a background service, the same on Linux, macOS and Windows:
+Or run services manually:
 
 ```bash
-cd cli && go build -o wizard ./cmd/wizard   # or download a prebuilt binary once one exists
-cd .. && ./cli/wizard init                  # checks Python 3.11+/Node 20+, installs dependencies
-./cli/wizard start                          # launches both in the background, opens a browser
-./cli/wizard status                         # what's running, host sizing, sandbox capability
-./cli/wizard stop
-```
-
-See [The wizard CLI](cli.md) for the full subcommand reference. Or do it by
-hand:
-
-```bash
-pip install -r requirements.txt -r requirements-local.txt
+# Terminal 1: Backend
+uv pip install -r requirements.txt -r requirements-local.txt
 cd backend && uvicorn src.api.api:app --port 8000
-cd frontend && npm ci && npm run dev
+
+# Terminal 2: Frontend
+cd frontend && pnpm install && pnpm dev
 ```
 
-`EXECUTION_BACKEND` defaults to `host`: generated code runs in a
-**subprocess** of the backend — a separate process with a memory ceiling, a
-per-step timeout, an interrupt that works, and a namespace that survives
-between steps. Docker is opt-in; set `EXECUTION_BACKEND=docker` to use a
-container per session instead. See
-[Execution & Sandboxing](../concepts/execution-and-sandboxing.md) for what's
-actually enforced on your platform.
+---
 
-## Using LM Studio instead of (or alongside) Ollama
+## 🧠 Model Setup
 
-LM Studio works out of the box — no configuration needed if it's on its
-default port.
+You do **not** need to install a model before starting. Once the app is running:
+1. Navigate to **/models** in the web interface.
+2. Click **Install a model** to download starter models directly within the UI.
 
-1. In LM Studio, open **Developer** and **Start Server**.
-2. Turn on **Serve on Local Network**. LM Studio binds to loopback by
-   default, so a Dockerized backend can't reach it otherwise. (Skip this if
-   you run the backend outside Docker.)
-3. In the model picker, switch the provider to **LM Studio**.
+If you prefer pulling models via terminal:
 
-The provider is stored **per role**, so you can leave the reasoning model on
-Ollama and put only the code model on LM Studio, or vice versa.
+```bash
+# Recommended models
+ollama pull qwen2.5:3b           # Reasoning Manager model
+ollama pull qwen2.5-coder:7b     # Python Worker model
+ollama pull embeddinggemma       # Semantic RAG embeddings (optional)
+```
 
-Any other OpenAI-compatible server (vLLM, llama.cpp, a hosted gateway) works
-through `API_PROVIDER=custom_gateway` with `GATEWAY_API_URL`.
+---
 
-## A note on model size
+## ⚠️ Platform Notes
 
-The agent decides its own next step each iteration, which is a lot to ask of
-a very small model. Under 4B parameters it does not ask: it runs a shorter,
-deterministic loop — write the code, correct it if it fails, answer — with no
-self-revision and no verification pass. 7B and up is where the investigation
-behaviour starts to earn its round-trips. Picking **Deep** in the composer
-restores them at any size.
+### macOS Host Mode & OpenMP
+If you run `EXECUTION_BACKEND=host` on macOS and use machine learning packages (`xgboost`, `lightgbm`), install the OpenMP runtime library:
 
-**Do not put a reasoning model in the manager role.** `MODEL_NAME` is called
-three to five times per question. A reasoning model (`deepseek-r1`, `qwq`,
-anything that thinks out loud) spends hundreds to thousands of tokens
-deliberating before each one. Use a plain instruct model here —
-`qwen2.5:3b` and `llama3.2:3b` are both good and small. A reasoning model is
-fine as the `WORKER_MODEL_NAME`, which is called once per step.
+```bash
+brew install libomp
+```
+
+This is an upstream requirement of compiled OpenMP wheels on macOS.

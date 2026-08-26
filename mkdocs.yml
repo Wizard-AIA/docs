@@ -60,6 +60,7 @@ nav:
       - The wizard CLI: getting-started/cli.md
   - Concepts:
       - Architecture: concepts/architecture.md
+      - Task Routing & Tiers: concepts/routing-and-tiers.md
       - Data Modes & Privacy: concepts/data-modes-and-privacy.md
       - Execution & Sandboxing: concepts/execution-and-sandboxing.md
       - Permissions & Consent: concepts/permissions-and-consent.md
