@@ -4,6 +4,18 @@ All notable changes and milestones across Wizard releases.
 
 ---
 
+## 🚀 [v1.0.2](https://github.com/Wizard-AIA/Wizard-w2/releases/tag/v1.0.2) — Ecosystem Documentation & Community Governance
+
+*Release Date: August 26, 2026*
+
+### Highlights
+- **Ecosystem Documentation Overhaul:** Refreshed MkDocs Material site with custom styling (`extra.css`), glassmorphism card layouts, and interactive Mermaid architecture flowcharts.
+- **Community Skill Registry:** Populated the `skills` repository with curated domain skills (`cohort-analysis`, `data-quality-triage`, `outlier-detection`, `time-series-forecasting`) and added automated `registry.json` compilation.
+- **Standardized Issue Forms:** Cross-platform GitHub issue forms with dropdown selectors for Operating System, Execution Backend, and LLM Provider.
+- **Organization Profile Refresh:** Direct standalone download matrix for macOS (arm64/amd64), Linux (amd64/arm64), and Windows.
+
+---
+
 ## 🚀 [v1.0.1](https://github.com/Wizard-AIA/Wizard-w2/releases/tag/v1.0.1) — Analytics, Task Routing, Arrow Streaming & Hardening
 
 *Release Date: August 25, 2026*
