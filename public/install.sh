@@ -66,7 +66,7 @@ TAG="${WIZARD_VERSION:-}"
 if [ -z "${TAG}" ]; then
     log_info "Resolving latest release from GitHub..."
     if command -v curl >/dev/null 2>&1; then
-        LATEST_TAG=$(curl -sSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/' || true)
+        LATEST_TAG=$(curl -sSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep '"tag_name":' | head -n 1 | sed -E 's/.*"tag_name": *"([^"]+)".*/\1/' || true)
     fi
     TAG="${LATEST_TAG:-v1.0.2}"
 fi
@@ -90,12 +90,12 @@ trap cleanup EXIT
 
 log_info "Downloading ${BOLD}${ASSET_NAME}${RESET}..."
 if command -v curl >/dev/null 2>&1; then
-    curl -fL --progress-bar "${DOWNLOAD_URL}" -o "${TMP_DIR}/${ASSET_NAME}" || {
+    curl --http1.1 -fSL --retry 3 --retry-delay 2 "${DOWNLOAD_URL}" -o "${TMP_DIR}/${ASSET_NAME}" || {
         log_error "Failed to download asset from ${DOWNLOAD_URL}"
         exit 1
     }
 elif command -v wget >/dev/null 2>&1; then
-    wget -q --show-progress "${DOWNLOAD_URL}" -O "${TMP_DIR}/${ASSET_NAME}" || {
+    wget --tries=3 -q --show-progress "${DOWNLOAD_URL}" -O "${TMP_DIR}/${ASSET_NAME}" || {
         log_error "Failed to download asset from ${DOWNLOAD_URL}"
         exit 1
     }
@@ -106,7 +106,7 @@ fi
 
 # 5. Extract and Install
 log_info "Extracting to ${INSTALL_DIR}..."
-mkdir -p "${BIN_DIR}"
+mkdir -p "${INSTALL_DIR}" "${BIN_DIR}"
 
 if command -v unzip >/dev/null 2>&1; then
     unzip -q -o "${TMP_DIR}/${ASSET_NAME}" -d "${INSTALL_DIR}"
@@ -117,17 +117,27 @@ else
     exit 1
 fi
 
-# Locate the binary
-WIZARD_BIN="${BIN_DIR}/wizard"
-if [ ! -f "${WIZARD_BIN}" ]; then
-    FOUND_BIN=$(find "${INSTALL_DIR}" -type f -name "wizard" 2>/dev/null | head -n 1 || true)
-    if [ -n "${FOUND_BIN}" ] && [ "${FOUND_BIN}" != "${WIZARD_BIN}" ]; then
-        mv "${FOUND_BIN}" "${WIZARD_BIN}"
-    fi
+# Locate the unpacked package folder
+PACKAGE_DIR="${INSTALL_DIR}/Wizard-${TAG}-${TARGET_OS}-${TARGET_ARCH}"
+if [ ! -d "${PACKAGE_DIR}" ]; then
+    # Fallback search if directory name differs
+    PACKAGE_DIR=$(find "${INSTALL_DIR}" -maxdepth 1 -type d -name "Wizard-*" | head -n 1)
 fi
 
-if [ -f "${WIZARD_BIN}" ]; then
-    chmod +x "${WIZARD_BIN}"
+if [ -n "${PACKAGE_DIR}" ] && [ -d "${PACKAGE_DIR}" ]; then
+    ln -sfn "${PACKAGE_DIR}" "${INSTALL_DIR}/current"
+    WIZARD_SRC_BIN="${PACKAGE_DIR}/cli/wizard"
+else
+    WIZARD_SRC_BIN=$(find "${INSTALL_DIR}" -type f -name "wizard" 2>/dev/null | head -n 1)
+fi
+
+WIZARD_BIN="${BIN_DIR}/wizard"
+if [ -n "${WIZARD_SRC_BIN}" ] && [ -f "${WIZARD_SRC_BIN}" ]; then
+    chmod +x "${WIZARD_SRC_BIN}"
+    ln -sfn "${WIZARD_SRC_BIN}" "${WIZARD_BIN}"
+else
+    log_error "Failed to locate wizard binary in extracted archive."
+    exit 1
 fi
 
 # 6. Configure Shell PATH
@@ -154,7 +164,7 @@ if [ -d "$HOME/.config/fish" ]; then
 fi
 
 echo ""
-log_success "Wizard ${TAG} installed successfully to ${BOLD}${BIN_DIR}/wizard${RESET}!"
+log_success "Wizard ${TAG} installed successfully to ${BOLD}${WIZARD_BIN}${RESET}!"
 
 if [ -n "${UPDATED_SHELL}" ]; then
     echo -e "${DIM}  Added to PATH in ${UPDATED_SHELL}${RESET}"

@@ -63,6 +63,7 @@ $tempZip = Join-Path $env:TEMP $assetName
 # 4. Download Release
 Write-WizardLog "Downloading $assetName..." "White"
 try {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     Invoke-WebRequest -Uri $downloadUrl -OutFile $tempZip -UseBasicParsing
 } catch {
     Write-WizardLog "Failed to download $downloadUrl : $_" "Red"
@@ -89,13 +90,33 @@ try {
     }
 }
 
-# Locate wizard.exe
-$wizardExe = Join-Path $binDir "wizard.exe"
-if (-not (Test-Path $wizardExe)) {
-    $foundExe = Get-ChildItem -Path $installDir -Filter "wizard.exe" -Recurse -File | Select-Object -First 1
-    if ($foundExe -and $foundExe.FullName -ne $wizardExe) {
-        Move-Item -Path $foundExe.FullName -Destination $wizardExe -Force
+# Locate extracted package folder and binary
+$pkgDir = Join-Path $installDir "Wizard-$tag-windows-$targetArch"
+$wizardSrc = $null
+
+if (Test-Path $pkgDir) {
+    $currentLink = Join-Path $installDir "current"
+    if (Test-Path $currentLink) {
+        Remove-Item $currentLink -Force -Recurse -ErrorAction SilentlyContinue
     }
+    try {
+        New-Item -ItemType Junction -Path $currentLink -Target $pkgDir -Force | Out-Null
+    } catch {
+        # Fallback if junctions not supported
+    }
+    $wizardSrc = Join-Path $pkgDir "cli\wizard.exe"
+}
+
+if (-not $wizardSrc -or -not (Test-Path $wizardSrc)) {
+    $foundExe = Get-ChildItem -Path $installDir -Filter "wizard.exe" -Recurse -File | Select-Object -First 1
+    if ($foundExe) {
+        $wizardSrc = $foundExe.FullName
+    }
+}
+
+$wizardExe = Join-Path $binDir "wizard.exe"
+if ($wizardSrc -and (Test-Path $wizardSrc)) {
+    Copy-Item -Path $wizardSrc -Destination $wizardExe -Force
 }
 
 # 6. Add to User PATH persistently
@@ -117,11 +138,11 @@ if ($needsPathUpdate) {
 }
 
 Write-Host ""
-Write-Host "[wizard-install] [OK] Wizard $tag installed successfully to $binDir\wizard.exe!" -ForegroundColor Green
+Write-Host "[wizard-install] [OK] Wizard $tag installed successfully to $wizardExe!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor White
 Write-Host "  1. Initialize workspace: " -NoNewline; Write-Host "wizard init" -ForegroundColor Green
 Write-Host "  2. Launch agent:         " -NoNewline; Write-Host "wizard start" -ForegroundColor Green
 Write-Host ""
-Write-Host "Note: If running in a new terminal, the 'wizard' command is now globally available." -ForegroundColor DarkGray
+Write-Host "Note: The 'wizard' command is now globally available in any new terminal window." -ForegroundColor DarkGray
 Write-Host ""
