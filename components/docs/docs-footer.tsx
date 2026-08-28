@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { REPO_URL } from "@/lib/wizard"
+import { REPO_URL, DOCS_EDIT_BASE_URL } from "@/lib/wizard"
 import { findDocPage } from "@/lib/docs-nav"
 
 export function DocsFooter() {
@@ -20,7 +20,7 @@ export function DocsFooter() {
           </a>
           {page && (
             <a
-              href={`${REPO_URL}/blob/master/website/content/docs/${page.slug}.md`}
+              href={`${DOCS_EDIT_BASE_URL}/${page.slug}.md`}
               target="_blank"
               rel="noreferrer"
               className="hover:text-foreground"

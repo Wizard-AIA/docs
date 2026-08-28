@@ -2,6 +2,8 @@
 // Verified against the repo directly (gh api, cli/README.md, README.md).
 
 export const REPO_URL = "https://github.com/Wizard-AIA/Wizard-w2";
+export const WEBSITE_REPO_URL = "https://github.com/Wizard-AIA/website";
+export const DOCS_EDIT_BASE_URL = `${WEBSITE_REPO_URL}/edit/main/content/docs`;
 // First-party docs live at /docs now — this used to point at the separate
 // MkDocs/GitHub Pages site, which is no longer linked from the site.
 export const DOCS_URL = "/docs";

@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowRight, ChevronRight, ExternalLink } from "lucide-react"
 import { DocContent } from "@/components/docs/doc-content"
 import { DocsToc } from "@/components/docs/docs-toc"
 import { Reveal } from "@/components/reveal"
+import { DOCS_EDIT_BASE_URL } from "@/lib/wizard"
 import { getAllDocSlugs, getDocSource, extractHeadings } from "@/lib/docs-content"
 import { findDocPage, findSectionForSlug, getAdjacentPages } from "@/lib/docs-nav"
 
@@ -83,9 +84,9 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
 
         {/* Edit on GitHub link */}
         <div className="mt-14 flex items-center justify-between border-t border-white/10 pt-6 text-xs text-white/40">
-          <span>Reviewed for Wizard v4.0.0</span>
+          <span>Reviewed for Wizard v1.0.5</span>
           <a
-            href={`https://github.com/Wizard-AIA/website/edit/main/content/docs/${slug}.md`}
+            href={`${DOCS_EDIT_BASE_URL}/${slug}.md`}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-white/50 transition-colors hover:text-white"
