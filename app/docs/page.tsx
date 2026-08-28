@@ -112,7 +112,7 @@ export default function DocsHomePage() {
           href="/docs/getting-started/quickstart"
           className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] px-5 py-2.5 text-sm font-medium text-white transition-all hover:bg-white/[0.08] hover:border-white/30"
         >
-          5-Minute Quickstart
+          2-Minute Quickstart
         </Link>
       </Reveal>
 
