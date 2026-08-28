@@ -85,7 +85,7 @@ const howItWorks = [
 
 export default function DocsHomePage() {
   return (
-    <div className="max-w-4xl">
+    <div className="min-w-0 max-w-4xl py-8 lg:py-10 pl-0 lg:pl-6">
       <Reveal>
         <div className="mb-3 inline-flex items-center gap-2 font-mono text-xs text-white/50">
           <span className="h-1.5 w-1.5 rounded-full bg-[#eca8d6]" />

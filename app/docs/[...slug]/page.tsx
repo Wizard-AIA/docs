@@ -60,8 +60,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
   const { prev, next } = getAdjacentPages(slug)
 
   return (
-    <div className="flex gap-12 xl:gap-16">
-      <article className="min-w-0 max-w-3xl flex-1">
+    <div className="flex items-start gap-8 lg:gap-12 xl:gap-16">
+      <article className="min-w-0 max-w-3xl flex-1 py-8 lg:py-10 pl-0 lg:pl-6">
         {/* Breadcrumb */}
         <nav aria-label="Breadcrumb" className="mb-8 flex items-center gap-2 font-mono text-xs text-white/50">
           <Link href="/docs" className="transition-colors hover:text-white">
@@ -83,7 +83,7 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
 
         {/* Edit on GitHub link */}
         <div className="mt-14 flex items-center justify-between border-t border-white/10 pt-6 text-xs text-white/40">
-          <span>Reviewed for Wizard v1.0.2</span>
+          <span>Reviewed for Wizard v4.0.0</span>
           <a
             href={`https://github.com/Wizard-AIA/website/edit/main/content/docs/${slug}.md`}
             target="_blank"
@@ -132,10 +132,8 @@ export default async function DocPage({ params }: { params: Promise<{ slug: stri
         </Reveal>
       </article>
 
-      <aside className="hidden w-60 shrink-0 xl:block">
-        <div className="sticky top-28">
-          <DocsToc headings={headings} />
-        </div>
+      <aside className="sticky top-14 hidden h-[calc(100vh-3.5rem)] w-60 shrink-0 overflow-y-auto py-8 pl-6 border-l border-white/5 xl:block [scrollbar-width:thin]">
+        <DocsToc headings={headings} />
       </aside>
     </div>
   )
