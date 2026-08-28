@@ -13,6 +13,27 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v1.0.5",
+    tag: "v1.0.5",
+    kind: "feature",
+    title: "Data Preview Fix, Universal Model Filtering & Settings Environment Controls",
+    date: "2026-08-28",
+    highlights: [
+      {
+        title: "Dataset preview 'No rows to show' fix",
+        body: "Corrected PyArrow schema inference that silently aborted Arrow IPC streaming for datasets with string columns. Schema is now derived from actual data rows instead of empty slices, and the DataGrid loading state prevents empty-state flash.",
+      },
+      {
+        title: "Universal cloud model filtering",
+        body: "Added intelligent model filtering that excludes TTS, image/video generation, embeddings, robotics, and other non-chat endpoints from cloud providers. Gemini model list reduced from 54 raw models to 18 usable chat/coding/reasoning models with proper capability tagging.",
+      },
+      {
+        title: "Comprehensive settings environment controls",
+        body: "Added full UI controls for API Provider, Data Mode, Gateway URL/Key, Sandbox Timeout, Council Review, Vision Analysis, Context Documents, and Skills toggles — all with atomic persistence to the backend .env file.",
+      },
+    ],
+  },
+  {
     version: "v1.0.4",
     tag: "v1.0.4",
     kind: "feature",
