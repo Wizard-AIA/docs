@@ -33,17 +33,17 @@ export interface ReleaseInfo {
 // the GitHub API is unreachable or rate-limited, so /download never renders
 // broken links just because that one request failed.
 const FALLBACK_RELEASE: ReleaseInfo = {
-  tag: "v1.0.3",
-  publishedAt: "2026-08-28T09:34:43Z",
-  htmlUrl: `${REPO_URL}/releases/tag/v1.0.3`,
+  tag: "v1.0.4",
+  publishedAt: "2026-08-28T10:04:00Z",
+  htmlUrl: `${REPO_URL}/releases/tag/v1.0.4`,
   live: false,
   assets: [
-    { name: "Wizard-v1.0.3-darwin-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.3/Wizard-v1.0.3-darwin-arm64.zip`, sizeBytes: 6186524 },
-    { name: "Wizard-v1.0.3-darwin-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.3/Wizard-v1.0.3-darwin-amd64.zip`, sizeBytes: 6606028 },
-    { name: "Wizard-v1.0.3-linux-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.3/Wizard-v1.0.3-linux-amd64.zip`, sizeBytes: 6500352 },
-    { name: "Wizard-v1.0.3-linux-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.3/Wizard-v1.0.3-linux-arm64.zip`, sizeBytes: 6081740 },
-    { name: "Wizard-v1.0.3-windows-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.3/Wizard-v1.0.3-windows-amd64.zip`, sizeBytes: 6606028 },
-    { name: "Wizard-w2-sbom.spdx.json", url: `${REPO_URL}/releases/download/v1.0.3/Wizard-w2-sbom.spdx.json`, sizeBytes: 0 },
+    { name: "Wizard-v1.0.4-darwin-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.4/Wizard-v1.0.4-darwin-arm64.zip`, sizeBytes: 6186524 },
+    { name: "Wizard-v1.0.4-darwin-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.4/Wizard-v1.0.4-darwin-amd64.zip`, sizeBytes: 6606028 },
+    { name: "Wizard-v1.0.4-linux-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.4/Wizard-v1.0.4-linux-amd64.zip`, sizeBytes: 6500352 },
+    { name: "Wizard-v1.0.4-linux-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.4/Wizard-v1.0.4-linux-arm64.zip`, sizeBytes: 6081740 },
+    { name: "Wizard-v1.0.4-windows-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.4/Wizard-v1.0.4-windows-amd64.zip`, sizeBytes: 6606028 },
+    { name: "Wizard-w2-sbom.spdx.json", url: `${REPO_URL}/releases/download/v1.0.4/Wizard-w2-sbom.spdx.json`, sizeBytes: 0 },
   ],
 };
 

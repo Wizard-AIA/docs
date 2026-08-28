@@ -13,6 +13,31 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v1.0.4",
+    tag: "v1.0.4",
+    kind: "feature",
+    title: "Persistent Workspace Context, Live Datasets Sidebar & Interactive Settings Workbench",
+    date: "2026-08-28",
+    highlights: [
+      {
+        title: "Global persistent workspace context",
+        body: "Elevated the chat streaming state, WebSocket transport, investigation trail, and dataset state to the root WorkspaceProvider. Tab switching across Chat, Data, Skills, Models, and Settings no longer interrupts execution turns or clears conversational history.",
+      },
+      {
+        title: "Real-time dataset sidebar & live execution pulse",
+        body: "Added an active datasets panel directly in the main navigation sidebar with live row counts, fast dataset switching, and an animated live pulsing badge that tracks active background execution.",
+      },
+      {
+        title: "Interactive runtime & environment settings workbench",
+        body: "Upgraded settings from static readouts to interactive management with runtime execution backends (host, docker, inprocess), OS-level sandboxing, reasoning depth tiers, verification gates, and atomic .env file persistence on the backend.",
+      },
+      {
+        title: "Synchronized OpenAPI & TypeScript contracts",
+        body: "Automated end-to-end schema synchronization and contract validation across backend FastAPI schemas and frontend TypeScript models.",
+      },
+    ],
+  },
+  {
     version: "v1.0.3",
     tag: "v1.0.3",
     kind: "feature",
