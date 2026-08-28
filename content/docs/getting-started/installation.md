@@ -22,7 +22,7 @@ Before installing Wizard, verify your system matches the runtime requirements fo
 
 Choose the installation channel that best aligns with your infrastructure policies:
 
-### Channel A: Homebrew (macOS & Linux) — *Recommended*
+### Channel A: Homebrew (macOS & Linux)
 
 The official Homebrew tap delivers pre-compiled, self-contained releases with global binary symlinking:
 
@@ -33,23 +33,60 @@ brew tap Wizard-AIA/wizard
 # 2. Install the Wizard suite
 brew install wizard
 
-# 3. Verify global CLI installation
-wizard version
-```
-
-Once installed, initialize your local configuration and launch the background supervisor:
-
-```bash
-# Initialize Python virtualenv, install dependencies, and configure backend/.env
+# 3. Initialize workspace and launch
 wizard init
-
-# Launch backend + frontend daemons and launch your browser
 wizard start
 ```
 
 ---
 
-### Channel B: Standalone Release Packages (Zero-Compiler Deployment)
+### Channel B: Linux 1-Command Universal Installer (Curl)
+
+For all Linux distributions (Ubuntu, Debian, Fedora, Arch, RHEL, Alpine, Pop!_OS), install with a single shell command:
+
+```bash
+# Automatically detects architecture (x86_64 or aarch64), verifies checksums, and configures PATH
+curl -fsSL https://wizardw2.vercel.app/install.sh | bash
+```
+
+Once installed, initialize and launch:
+
+```bash
+wizard init
+wizard start
+```
+
+---
+
+### Channel C: Windows 1-Command Installer (PowerShell & Scoop)
+
+#### Option 1: Native PowerShell 1-Liner
+Open PowerShell (Terminal) and run:
+
+```powershell
+# Automatically downloads latest release, extracts to %LOCALAPPDATA%\Wizard, and registers global PATH
+irm https://wizardw2.vercel.app/install.ps1 | iex
+```
+
+Once complete, run:
+
+```powershell
+wizard init
+wizard start
+```
+
+#### Option 2: Scoop Package Manager
+If you use [Scoop](https://scoop.sh) on Windows:
+
+```powershell
+scoop install https://wizardw2.vercel.app/wizard.json
+wizard init
+wizard start
+```
+
+---
+
+### Channel D: Standalone Release Packages (Zero-Compiler Deployment)
 
 Standalone release packages bundle the pre-compiled `wizard` Go binary, backend application code, and optimized production Next.js frontend builds without requiring Git or Go compilers.
 
@@ -86,7 +123,7 @@ cd Wizard-v4.0.0-darwin-arm64
 
 ---
 
-### Channel C: Production Containerization (Docker Compose)
+### Channel E: Production Containerization (Docker Compose)
 
 For fully containerized, air-gapped deployments where Python and Node run inside isolated microservices:
 
@@ -120,7 +157,7 @@ SANDBOX_TIER=full docker compose up --build -d
 
 ---
 
-### Channel D: Building from Source
+### Channel F: Building from Source
 
 For contributors and enterprise teams maintaining internal forks:
 

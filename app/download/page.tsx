@@ -71,9 +71,38 @@ export default async function DownloadPage() {
           </Link>
         </Reveal>
 
-        {/* Primary CTA — one command, front and center */}
+        {/* Primary CTA — 1-click commands for macOS, Linux, and Windows */}
         <Reveal delay={100} className="mt-12">
-          <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard && wizard init && wizard start" label="macOS / Linux — Homebrew" />
+          <HeroTerminal
+            label="1-line install"
+            tabs={[
+              {
+                id: "mac",
+                label: "macOS (Homebrew)",
+                command: "brew tap Wizard-AIA/wizard && brew install wizard && wizard init && wizard start",
+              },
+              {
+                id: "linux",
+                label: "Linux (Curl)",
+                command: "curl -fsSL https://wizardw2.vercel.app/install.sh | bash",
+              },
+              {
+                id: "windows-ps",
+                label: "Windows (PowerShell)",
+                command: "irm https://wizardw2.vercel.app/install.ps1 | iex",
+              },
+              {
+                id: "scoop",
+                label: "Windows (Scoop)",
+                command: "scoop install https://wizardw2.vercel.app/wizard.json",
+              },
+              {
+                id: "docker",
+                label: "Docker",
+                command: "git clone https://github.com/Wizard-AIA/Wizard-w2.git && cd Wizard-w2 && docker compose up -d",
+              },
+            ]}
+          />
         </Reveal>
 
         {/* Prerequisites */}

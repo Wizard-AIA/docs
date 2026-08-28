@@ -216,13 +216,18 @@ export function HeroSection() {
                   tabs={[
                     {
                       id: "brew",
-                      label: "Homebrew",
+                      label: "macOS (Brew)",
                       command: "brew tap Wizard-AIA/wizard && brew install wizard",
                     },
                     {
-                      id: "binary",
-                      label: "Release Zip",
-                      command: "curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-darwin-arm64.zip",
+                      id: "linux",
+                      label: "Linux (Curl)",
+                      command: "curl -fsSL https://wizardw2.vercel.app/install.sh | bash",
+                    },
+                    {
+                      id: "windows",
+                      label: "Windows (PowerShell)",
+                      command: "irm https://wizardw2.vercel.app/install.ps1 | iex",
                     },
                     {
                       id: "docker",
