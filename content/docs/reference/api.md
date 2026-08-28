@@ -1,59 +1,95 @@
-# API & Event Protocol
+# REST API & WebSocket Event Protocol Specification
 
-Full interactive API documentation is served live by your own instance at
-**`http://localhost:8000/docs`** — that's the authoritative, always-current
-reference for request/response shapes. This page covers the one thing that
-doesn't show up well in an OpenAPI viewer: the WebSocket event protocol.
+Wizard exposes a high-performance control plane over HTTP/REST and bidirectional WebSockets. This reference documents the transport models, authentication headers, session management, and the streaming event protocol.
 
-## One request path, two transports
+Interactive OpenAPI 3.1 documentation is served live on your instance at **`http://localhost:8000/docs`**.
 
-`POST /api/chat` and `WS /ws/chat` both call the same underlying
-orchestrator — the transport only translates internal events into frames.
-Anything true of one is true of the other; the WebSocket just makes each
-step visible as it happens instead of returning once at the end.
+---
 
-## Event frames
+## 1. Authentication & Session Headers
 
-| Frame | What it carries |
-|---|---|
-| `session` | Session identity, sent once at connection start. |
-| `status` | High-level state changes. |
-| `step_start` / `step_end` | Bounds around one sub-task. |
-| `reasoning_delta` | Streamed manager "thinking," if the model exposes it. |
-| `plan_delta` | Streamed plan content — split from reasoning by tracking the reasoning-tag boundary as it streams in, so the UI can switch from a thinking panel to a plan view at the right moment. |
-| `content_delta` | Streamed final-answer text. |
-| `code` | Generated code for the current step. |
-| `stdout` | Real execution output. |
-| `artifact` | A file produced by execution (a chart, an export). |
-| `approval_required` | The turn is **paused**, not ended — carries an `id` you reply to. This is the one frame that distinguishes "waiting for you" from "done." |
-| `warning` / `error` | Non-fatal and fatal problems respectively. |
-| `final` | The synthesized answer, plus any trust-layer annotations. |
+| Header | Required | Purpose | Example |
+|---|:---:|---|---|
+| `X-Session-Id` | Optional | Binds the request to an existing analytical session. Auto-created if omitted. | `7ce22de891044f8e82342468aafe940c` |
+| `X-API-Key` | Conditional | Required for mutating routes when `API_KEY` is configured in `backend/.env`. | `wiz_secret_key_994` |
+| `Content-Type` | Yes | Standard MIME type for JSON payloads (`application/json`) or multipart uploads. | `application/json` |
 
-### Investigation frames (the agentic loop made visible)
+---
 
-| Frame | What it carries |
-|---|---|
-| `iteration_start` | A new loop iteration has begun. |
-| `action` | Which action the manager chose (`code`/`consult`/`reflect`/`parallel`/`inspect`/`answer`). |
-| `observation` | The result of the most recently opened `action` — closes the most recent one without an observation yet, rather than being matched by an id. |
-| `finding` | Something the agent learned worth surfacing directly. |
-| `plan_revised` | The plan changed mid-run in response to real output. |
-| `assumption` | A silent decision in the generated code (dropped nulls, an inner join, etc.), surfaced alongside the answer. |
-| `verification` | The result of re-deriving the headline number by a different route. |
-| `skill` | Names which installed skill informed this turn, if any. |
-| `skill_candidate` | An offer to save a recurring analysis as a skill — nothing is written unless you confirm. |
-| `usage` | What the turn cost, emitted **only** when a cloud model actually ran. Under `local-only` this frame never appears — there's nothing to meter. |
+## 2. Core REST Endpoints
 
-## A client that ignores the newer frames still works
+### System & Diagnostics
+- `GET /health`: Cluster health check, active version, backend name (`host`/`docker`), and default provider.
+- `GET /api/config`: Capabilities manifest used by the frontend to render feature workbenches (data modes, sandbox capabilities, active tier).
+- `GET /api/sandbox/selftest`: Probes live OS sandbox enforcement (Landlock, seccomp, seatbelt) and returns containment verdict.
 
-Every frame listed above is additive. A client built against an earlier
-version of the protocol that only understands `content_delta`/`stdout`/
-`final` degrades gracefully rather than breaking — it just doesn't render
-the richer investigation view.
+### Session Lifecycle
+- `POST /api/session`: Creates a new isolated analytical session. Returns `SessionResponse` with unique `session_id`.
+- `GET /api/session`: Returns current session state, loaded tables, models, and data privacy policies.
+- `DELETE /api/session`: Destroys the session, drops ephemeral dataframes, and terminates execution sandboxes.
+- `POST /api/session/reset`: Resets Python execution variables while preserving loaded datasets.
 
-## Subagent branches
+### Datasets & Ingestion
+- `POST /api/datasets`: Ingests multipart files (CSV, Parquet, Excel, Feather, JSON) into the session workspace.
+  - Query parameter `clean=true|false`: Triggers automated data cleaning pass.
+- `GET /api/datasets`: Lists all mounted tables and preview metadata in the session catalog.
+- `DELETE /api/datasets/{name}`: Unmounts a table and purges cached vector embeddings.
 
-When a step fans out into parallel sub-investigations, each branch's own
-activity reuses the *same* frame types (`action`, `observation`, `code`,
-`stdout`, …), just additionally tagged with a `branch` identifier. There's
-no separate frame vocabulary for subagent activity to learn.
+### Skills & Knowledge
+- `GET /api/skills`: Returns all discovered built-in, user, and project skills.
+- `POST /api/skills/install`: Stages and imports an external skill from a Git URL.
+
+### Analytical Turn Execution
+- `POST /api/chat`: Executes a synchronous analytical turn and returns the complete synthesized response with code and citations.
+
+---
+
+## 3. WebSocket Streaming Protocol (`/ws/chat`)
+
+For interactive real-time UX, clients establish a persistent WebSocket connection to `/ws/chat`. The server streams granular event frames as the agent observes, reasons, and executes:
+
+```json
+{
+  "type": "iteration_start",
+  "iteration": 1,
+  "budget": 12,
+  "timestamp": 1787907459.12
+}
+```
+
+### Complete Event Frame Specification:
+
+| Event Type | Payload Fields | Architectural Significance |
+|---|---|---|
+| `session` | `session_id`, `data_mode` | Emitted once on handshake to confirm session binding. |
+| `reasoning_delta`| `content` | Streamed tokens from the Manager's chain-of-thought deliberation. |
+| `plan` | `steps`, `hypothesis` | Structured multi-stage plan authored by the Manager. |
+| `action` | `kind`, `target` | Move chosen by the agent (`code`, `consult`, `reflect`, `parallel`, `answer`). |
+| `code` | `code`, `language` | Sandboxed Python code generated by the Worker model. |
+| `stdout` | `content` | Real-time standard output from the isolated execution sandbox. |
+| `observation` | `output`, `ok` | Result of the action fed back into the agent's observation loop. |
+| `finding` | `content` | Intermediate statistical insight discovered from execution output. |
+| `assumption` | `description`, `source` | Transparent extraction of silent data operations (null drops, joins, type coercions). |
+| `verification` | `metric`, `match`, `discrepancy` | Result of dual-calculation verification re-deriving the headline conclusion. |
+| `content_delta` | `content` | Streamed tokens of the final synthesized answer. |
+| `artifact` | `name`, `type`, `url` | Interactive chart (Plotly HTML), exported Parquet file, or report document. |
+| `approval_required`| `action_id`, `prompt` | **Pauses the turn**; prompts user for explicit consent before running privileged actions. |
+| `usage` | `prompt_tokens`, `completion_tokens`, `cost_usd` | Financial and token accounting (emitted only when cloud models run). |
+| `done` | `turn_id`, `duration_sec` | Signals completion of the analytical turn. |
+
+---
+
+## 4. Subagent Branching Multiplexing
+
+When an analytical task fans out into parallel sub-investigations (e.g. comparing 4 marketing channels simultaneously), each branch reuses the same event frames, qualified by a `branch` field:
+
+```json
+{
+  "type": "code",
+  "branch": "channel_search_paid",
+  "code": "df[df['channel'] == 'paid_search'].describe()"
+}
+```
+
+The frontend multiplexes these events into concurrent subagent cards without requiring separate WebSocket connections.
+

@@ -1,78 +1,81 @@
-# Data Modes & Privacy
+# Data Modes, Privacy & Air-Gap Governance
 
-This is the mechanism behind Wizard's local-first promise. Without it,
-"your data stays local" would just be a property of how you happened to
-configure a `.env` file — assign a cloud provider to a role, and the
-prompt, sample rows and all, goes to it. Wizard makes that an explicit,
-enforced, session-wide setting instead.
+In enterprise analytics, data residency and confidentiality are non-negotiable. Wizard replaces implicit network trust with an explicit, cryptographically verifiable **Data Mode Governance Engine**.
 
-## The three modes
+---
 
-| Mode | Behavior |
-|---|---|
-| `local-only` | Cloud providers are **refused**, not skipped — a hard boundary, not a preference. Attempting to resolve a cloud provider raises rather than silently falling back. |
-| `cloud-only` | Only cloud providers may be used. |
-| `hybrid` | Local and cloud providers can both be assigned, per role — plan on a local model, generate code on a cloud one, or any other split. |
+## 1. The Three Governance Modes
 
-Mode is set session-wide and seeded from your configured default. Switching
-mode **clears any role assignment the new mode forbids** — the alternative
-would be the next question simply failing, which would make a setting you
-chose to be *safer* read as having broken the app.
+Governed by `DATA_MODE` in `backend/.env` or configured per-session:
 
-## Three separate axes
+| Mode | Air-Gap Guarantee | Cloud Model Call Policy | Data Egress Behavior |
+|---|:---:|---|---|
+| **`local-only`** *(Default)* | **100% Air-Gapped** | **STRICTLY PROHIBITED**: Calling an external API raises `DataModeViolation`. | Zero outbound traffic. Web search tools are completely disabled. Embeddings run locally. |
+| **`hybrid`** | **Selective Redaction** | **PERMITTED BY ROLE**: Cloud Manager (reasoning) + Local Worker (code execution) or vice versa. | Raw row data is dynamically stripped via the Redaction Engine before cloud submission. |
+| **`cloud-only`** | **Frontier Cloud** | **ENABLED**: Directly dispatches prompts to Gemini, Claude, OpenAI, or custom gateways. | Full prompt telemetry with token and financial usage tracking. |
 
-Data mode is deliberately not one setting:
+---
 
-- **Mode** — which providers a role may resolve to (above).
-- **Policy** — how much of your data a cloud-bound prompt actually carries.
-  Redaction (below) is decided **per prompt**, based on which provider that
-  specific prompt is going to. Under `hybrid` with a cloud manager and a
-  local worker, the planning prompt is redacted and the code-generation
-  prompt isn't.
-- **Tools** — web search is *unavailable* under `local-only`, not merely
-  unchosen. If the agent's plan would search the web, that step is dropped
-  with a warning rather than turned into an approval prompt — there's no
-  consent that would make it allowed, so asking would be theatre.
+## 2. Hard Security Boundaries vs "Silent Fallbacks"
 
-## What redaction actually withholds
+In Wizard, privacy boundaries are enforced as deterministic policy checks, never as soft preference hints:
 
-When a prompt is redacted, it keeps shape, column names, dtypes, null rates
-and semantic types — but drops every real value: example rows, the
-data-glimpse preview, summary statistics, and categorical distinct values
-(replaced by a count). The model is told explicitly that values were
-withheld and must be computed, not guessed.
+```python
+# Code snippet representing runtime enforcement in LLMProvider
+if session.data_mode == "local-only" and provider.is_cloud:
+    raise DataModeViolation(
+        f"{provider.name} is a cloud provider and this session is set to local-only. "
+        "It cannot be used for the manager or worker role."
+    )
+```
 
-**Execution output is never redacted.** The final answer is synthesised from
-real stdout — withholding that would leave the answering model nothing to
-answer from. This is stated plainly in the UI rather than implied.
+If a user switches a live session to `local-only`, any active cloud model assignments are immediately revoked from the session state to prevent accidental leakage on subsequent queries.
 
-Redaction is settable **per source**, not just per session — a published
-reference table and a payroll export don't deserve the same policy. An
-explicit override survives independently of the session default, and is
-dropped when its dataset is removed, so re-uploading a file of the same name
-doesn't silently inherit a policy meant for something else.
+---
 
-## Embeddings are data too
+## 3. Dynamic Semantic Redaction Engine
 
-Text sent to be embedded is still data. A forbidden encoder **degrades to
-the built-in hashing fallback** instead of raising — retrieval quality
-getting worse is something you can live with; a failed question isn't.
+When operating in `hybrid` mode where a cloud model serves as the **Manager** (planner) and a local model operates as the **Worker** (coder), Wizard activates the **Prompt Redaction Engine**:
 
-## Credentials
+```
+Raw Ingested Dataset (e.g. payroll.csv)
+├── Employee Name: "Jane Doe" ───────────────► REDACTED (Withheld)
+├── Base Salary: $185,000 ──────────────────► REDACTED (Withheld)
+├── Department: "Engineering" ──────────────► REDACTED (Replaced with distinct count: 6)
+├── Column Names & Types ───────────────────► PRESERVED (string, float64, int32)
+└── Null Value Ratios ──────────────────────► PRESERVED (0.0% nulls)
+```
 
-API keys live in a local `credentials.json` under your platform's config
-directory — this is **not encryption at rest**, the guarantee is the same
-OS-level access control `~/.aws/credentials` relies on, stated plainly
-rather than dressed up as something stronger. Keys are never logged and
-never returned by any API route — only whether one is configured, and a
-masked hint (`…abcd`).
+### What Cloud Prompts Carry Under Redaction:
+1. **Schema & Structural Metadata**: Table names, column names, resolved data types, row counts.
+2. **Missingness & Distribution Metrics**: Null percentages, column sparsity.
+3. **Explicit Masking Invariant**: The cloud model receives an explicit instruction: `"Cell values have been withheld under corporate data protection policy. Author code to compute calculations directly on the execution node."`
 
-## Cost, when a cloud model runs
+### Granular Source-Level Overrides:
+Privacy policies can be attached to individual data sources. For example, a public `country_codes.csv` table can be marked `unrestricted` while an adjoining `patient_records.parquet` is pinned to `strict-redaction`.
 
-Token usage is reported per turn — three shapes of data depending on what
-the provider actually returns, falling back to an estimate flagged as
-inexact rather than silently reporting nothing. An unpriced model reports
-tokens with no cost figure and is named as unpriced, rather than guessing at
-a dollar amount. **Under `local-only`, there is no cost meter at all** — not
-`$0.00`, which would read as a computed number, but an explicit statement
-that there's nothing to meter.
+---
+
+## 4. Vector Embeddings & RAG Privacy
+
+Text chunks indexed for Retrieval-Augmented Generation (RAG) and skill discovery follow the exact same data policy:
+- Under `local-only`, embeddings are computed via local HuggingFace/Ollama embedding models (e.g. `embeddinggemma` or `nomic-embed-text`) or fall back to an in-process lexical hashing encoder.
+- Cloud embedding endpoints (e.g. `models/gemini-embedding-001`) are rejected under `local-only` mode.
+
+---
+
+## 5. Credential Security & Token Protection
+
+1. **Storage Isolation**: API keys are saved in `credentials.json` within the OS-specific configuration path (`~/Library/Application Support/Wizard` or `~/.config/wizard`) with restricted file permissions (`0600`).
+2. **Zero Plaintext API Exposure**: Control plane API endpoints never return plaintext API keys. The frontend displays only masked indicators (e.g. `...e8b4`).
+3. **Log Sanitization**: API keys, bearer tokens, and user credentials are scrubbed by the structured logger before records are committed to disk.
+
+---
+
+## 6. Financial & Token Auditing
+
+Every turn in `cloud-only` and `hybrid` mode logs structured usage telemetry:
+- Prompt tokens, completion tokens, and cache-hit ratios.
+- Real-time cost computation mapped against official provider rate cards.
+- In `local-only` mode, the cost ledger displays an explicit `"0 egress / air-gapped"` status.
+

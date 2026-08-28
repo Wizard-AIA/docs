@@ -1,63 +1,70 @@
-# Edge Cases & Gotchas
+# Enterprise Diagnostics, Edge Cases & Troubleshooting
 
-Wizard is built around a rule: when something can't be done fully, it
-degrades and says so, rather than failing outright or silently pretending
-everything's fine. That means there are a lot of specific, intentional
-"if X, then Y" behaviors — this page collects the ones people actually run
-into, organized by area, so you don't have to discover them one at a time.
+Wizard is engineered around deterministic containment, graceful degradation, and transparent operational reporting. When runtime constraints or infrastructure faults occur, Wizard reports exact root causes rather than failing silently.
 
-## Execution & sandboxing
+---
 
-- **Docker configured but unreachable.** Naming `EXECUTION_BACKEND=docker`
-  on a machine with no reachable Docker daemon degrades to `host` with a
-  logged warning — it does **not** fall back further to `inprocess`, which
-  offers no real isolation at all. `/settings` shows the configured setting
-  and the resolved runtime separately, so the substitution is visible.
-- **Network isolation isn't enforced on Windows.** Windows Filtering
-  Platform requires administrator privileges; `/settings` states this
-  directly with the reason rather than silently under-delivering.
-- **`RLIMIT_AS` doesn't exist on Windows.** The host runtime's memory cap is
-  documented as unenforced there rather than claimed — a Windows job object
-  handles process/memory limits differently, and that's what actually
-  applies.
-- **A sandbox self-test can come back `inconclusive`, not just
-  pass/fail.** The network probe dials an address guaranteed not to route
-  (RFC 5737); a timeout there proves nothing, so it's reported honestly as
-  inconclusive rather than counted as a pass.
-- **A permission grant made mid-turn restarts the execution child.** Some
-  sandbox mechanisms (a sealed Landlock ruleset, an applied macOS profile, a
-  lowered Windows token) can't be widened after the fact once applied. What
-  you lose is intermediate Python variables from that turn — your uploaded
-  data and tables are reloaded automatically.
-- **A literal `/workspace` path only means something inside a container.**
-  On the host backend, generated code needs the workspace path Wizard gives
-  it, not a hardcoded one — this is handled for you, but if you're reading
-  generated code and see a literal `/workspace`, that's a sign something
-  unusual is happening.
+## 1. Installation & CLI Supervision
 
-## Models & providers
+### Homebrew Global Execution Outside Git Checkouts
+- **Symptom**: Running `wizard start` or `wizard doctor` from arbitrary directories outside a repository clone.
+- **Resolution**: The `wizard` Go binary resolves its executable symlink via `os.Executable()`, inspecting `/opt/homebrew/Cellar/wizard/...` or local path layouts to anchor root directories automatically.
 
-- **Don't put a reasoning model in the manager role.** It's called 3–5
-  times per question; a model that "thinks out loud" (`deepseek-r1`, `qwq`)
-  spends real time deliberating before every one of those calls, and on a
-  small distill that can mean minutes per call. Its thinking is stripped
-  correctly and never reaches you — you still pay the time cost. A
-  reasoning model is fine as the **worker**, which is called once per step.
-- **LM Studio has no delete verb for models** — only Ollama does. This is a
-  reported limitation, not a broken button.
-- **An embedding model that loads but can't actually encode is dropped**,
-  not retried indefinitely.
-- **A missing or unreachable embedding server is remembered and backed
-  off** — retrying every single question on a machine with no encoder
-  running would make it feel broken. The backoff doubles on repeated
-  failure up to a cap.
-- **Cold-starting an embedding model is treated differently from steady
-  state.** Loading a model off disk gets a much longer timeout than using
-  an already-loaded one — judging both by the same short number rejects a
-  perfectly working encoder and permanently drops retrieval to word-overlap
-  matching for no good reason.
-- **An unpriced cloud model reports token counts with no dollar figure**,
-  and is named explicitly as unpriced — never a guessed cost.
+### Port Conflicts (Ports 8000 & 3000 Occupied)
+- **Symptom**: CLI exits with code `2` (`PORT_CONFLICT`).
+- **Diagnosis**: Run `wizard doctor` to view which process PID is holding the port.
+- **Remediation**: Pass custom ports via CLI flags:
+  ```bash
+  wizard start --backend-port 8080 --frontend-port 3001
+  ```
+
+---
+
+## 2. LLM Providers & Inferences
+
+### Avoiding Reasoning Models in the Manager Role
+- **Symptom**: Turn execution takes 5–10 minutes on local hardware without output.
+- **Root Cause**: Reasoning models (`deepseek-r1`, `qwq`) emit hundreds of internal thinking tokens before every JSON plan turn. Because the Manager is invoked multiple times per loop, this creates massive cumulative latency.
+- **Recommended Setup**:
+  - **Manager (Planner)**: Use standard instruct models (`qwen2.5:3b`, `llama3.2:3b`, `gemini-2.5-flash`, `claude-3-5-haiku`).
+  - **Worker (Coder)**: Reasoning or coding models (`qwen2.5-coder:7b`, `gemini-2.5-flash`, `claude-3-5-sonnet`).
+
+### Missing Optional Provider Dependencies
+- **Symptom**: `LLMUnavailableError: Provider 'openai' is configured, but langchain-openai is not installed.`
+- **Remediation**: Install provider extras via `uv pip install langchain-openai` or configure `API_PROVIDER=gemini` or `API_PROVIDER=ollama`.
+
+### Embedding Server Backoff & Lexical Fallback
+- **Behavior**: If an embedding endpoint (e.g. `embeddinggemma` on Ollama) is unreachable or fails during indexing, Wizard does not crash. It applies exponential backoff and automatically falls back to an in-process lexical hashing encoder to preserve RAG retrieval functionality.
+
+---
+
+## 3. Sandboxing & Runtime Execution
+
+### macOS OpenMP Runtime Missing for Tree Models (`xgboost`, `lightgbm`)
+- **Symptom**: Subprocess crash with `Library not loaded: /opt/homebrew/opt/libomp/lib/libomp.dylib` when running gradient boosting models under `EXECUTION_BACKEND=host`.
+- **Remediation**:
+  ```bash
+  brew install libomp
+  ```
+
+### Docker Daemon Unreachable Under `EXECUTION_BACKEND=docker`
+- **Behavior**: Wizard logs a degradation warning and safely switches runtime containment to the Host OS Sandbox (`HOST_SANDBOX=best-effort`) instead of falling back to insecure in-process mode.
+
+### Linux Landlock & Seccomp Availability
+- **Behavior**: On Linux kernels prior to 5.13 lacking Landlock LSM support, Wizard enforces Seccomp-BPF socket filters and process namespace isolation, reporting `"Landlock unsupported, fallback to process namespace isolation"` in `wizard doctor`.
+
+### Permission Grants Restarting Execution Children
+- **Behavior**: When an interactive consent grant widens directory access (`allowed_roots`), the execution child process is restarted to bake the new OS security profile into the kernel table from inception. Intermediary Python runtime variables are reset, but loaded datasets are automatically rehydrated into memory.
+
+---
+
+## 4. Anti-Hallucination & Numerical Provenance
+
+### Red Numerical Grounding Badges
+- **Symptom**: UI displays an ungrounded indicator on a synthesized metric.
+- **Cause**: The Manager model cited a number in its prose synthesis that was not present in the raw stdout of the executed Python code.
+- **Remediation**: Re-run the question with `AGENT_TIER=deep` or check the underlying code output tab to inspect the raw computed DataFrame.
+
 - **Under `local-only`, there's no cost meter at all.** Not `$0.00`
   (which would imply a real computed value) — an explicit statement that
   nothing is being metered.

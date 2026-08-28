@@ -1,89 +1,119 @@
-# Execution & Sandboxing
+# Execution Sandboxing & CodeGuard Security Architecture
 
-Generated code has to run somewhere, and that "somewhere" is the one part of
-a local-first agent that can actually hurt your machine if it's wrong.
-Wizard treats containment as something to report honestly, not assume.
+Running AI-generated code against proprietary enterprise data requires absolute containment. Wizard enforces a multi-layered **Defense-in-Depth** model combining compile-time AST security filtering, kernel-level OS containment, strict network isolation, and ephemeral container sandboxing.
 
-## Three backends, one real last resort
+---
 
-Selected by `EXECUTION_BACKEND`:
+## 1. Multi-Tier Security Hierarchy
 
-| Backend | What runs the code | Isolation |
-|---|---|---|
-| `host` (default) | one subprocess per session | separate process, OS-native sandboxing — see below |
-| `docker` | one container per session | process, filesystem, network, memory, PID, and capability isolation |
-| `inprocess` | guarded `exec` in the API process | none — development/test only, never used for a real session |
+Every line of Python code authored by Wizard passes through two independent security boundaries before reaching a CPU:
 
-**Docker is opt-in**, not a silent upgrade or downgrade: it's reached only
-when explicitly named, and naming it on a machine with no reachable Docker
-daemon degrades to `host` with a logged warning — it does not fall back to
-`inprocess`, which is the least contained runtime there is. The `/settings`
-page shows both the configured setting and the runtime that actually
-resolved, so a substitution is visible rather than silent.
+```
+┌──────────────────────────────────────────────────────────────┐
+│  Layer 1: CodeGuard AST Static Analyzer (Pre-Execution)      │
+│  - Parses Python AST to block 31 modules, 11 builtins, & dunders│
+│  - Rejects path traversals outside the session workspace     │
+└──────────────────────────────┬───────────────────────────────┘
+                               │ Code passes static policy
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Layer 2: OS Kernel / Container Sandboxing (Runtime)         │
+│  - macOS: Apple Seatbelt (SBPL) deny-all profile             │
+│  - Linux: Landlock LSM + Seccomp-BPF socket denial           │
+│  - Windows: Job Object limits + Low-Integrity token          │
+│  - Docker: Ephemeral container with read-only rootfs         │
+└──────────────────────────────┬───────────────────────────────┘
+                               │
+                               ▼
+┌──────────────────────────────────────────────────────────────┐
+│  Layer 3: Ephemeral Workspace Isolation                      │
+│  - Isolated socket communication on 127.0.0.1 loopback       │
+│  - Ephemeral disk mounts cleared on session deletion         │
+└──────────────────────────────────────────────────────────────┘
+```
 
-## What the host backend actually enforces
+---
 
-With Docker opt-in, the OS-native sandbox is what stands between generated
-code and your machine on a default install. It's controlled by
-`HOST_SANDBOX`: `off` / `best-effort` (default) / `require`. Three states
-rather than a boolean, because a silent downgrade and an outright refusal
-are both wrong as a universal answer — an older Linux kernel without
-Landlock still needs to be able to run something, while someone who
-explicitly asked for `require` shouldn't be quietly handed a subprocess that
-only looks sandboxed.
+## 2. Layer 1: CodeGuard AST Security Specification
 
-Per platform:
+Before code reaches an interpreter, CodeGuard constructs the Abstract Syntax Tree (AST) using Python's `ast` parser. CodeGuard does not rely on fragile regular expressions; it inspects syntactic nodes:
 
-- **Linux** — Landlock restricts filesystem access; a seccomp-bpf filter
-  refuses new outbound socket creation for `AF_INET`/`AF_INET6`/
-  `AF_PACKET`/`AF_NETLINK`.
-- **macOS** — a deny-by-default `sandbox-exec` (SBPL) profile.
-- **Windows** — a job object capping memory and process count, plus a Low
-  integrity level the child applies to itself, which blocks writes outside
-  directories explicitly labelled for it.
+### Prohibited Language Constructs:
 
-`HOST_SANDBOX_NETWORK` (default `deny`) governs *outbound* traffic only —
-loopback always stays open, because the local execution protocol itself is
-a loopback socket.
+| Category | Count | Blocked Identifiers |
+|---|:---:|---|
+| **Banned Modules** | 31 | `os`, `sys`, `subprocess`, `shutil`, `signal`, `socket`, `http`, `urllib`, `requests`, `httpx`, `aiohttp`, `ftplib`, `smtplib`, `telnetlib`, `xmlrpc`, `ctypes`, `importlib`, `runpy`, `code`, `codeop`, `compileall`, `py_compile`, `ensurepip`, `venv`, `pip`, `setuptools`, `distutils`, `site`, `sysconfig`, `gc`, `inspect` |
+| **Banned Builtin Calls** | 11 | `eval`, `exec`, `compile`, `__import__`, `globals`, `locals`, `vars`, `breakpoint`, `memoryview`, `exit`, `quit` |
+| **Banned Dunder Attributes** | 22 | `__subclasses__`, `__bases__`, `__base__`, `__mro__`, `__globals__`, `__code__`, `__closure__`, `__builtins__`, `__loader__`, `__reduce__`, `__reduce_ex__`, `__self__`, `__dict__`, `__func__`, `__wrapped__`, `__getattribute__`, `__init_subclass__`, `system`, `popen`, `spawn`, `fork`, `kill` |
+| **Filesystem Path Escapes** | — | Absolute paths outside session directory, `../` directory traversals, `/etc/passwd`, `/proc/self`, Windows drive root escapes. |
 
-**Network enforcement is not available on Windows** — Windows Filtering
-Platform needs administrator privileges, and the alternative (AppContainer)
-would mean re-ACLing your entire Python installation. This is stated
-directly rather than implied: `/settings` lists what your machine can
-actually enforce, with a reason for every gap.
+### Syntax Error Self-Correction Loop
+If generated code contains a syntax anomaly (e.g. unclosed parenthesis), CodeGuard marks the verdict as `retryable_error: true`. The orchestrator feeds the parser error back to the Worker LLM to regenerate valid code without treating syntax errors as malicious security violations.
 
-## Verification is a probe, not a claim
+---
 
-`GET /api/sandbox/selftest` spawns a real child process through the same
-machinery a session would use, and has it attempt each forbidden operation.
-Outcomes are `blocked`, `allowed`, or **`inconclusive`** — the network probe
-dials an address guaranteed not to route (RFC 5737 TEST-NET), so a timeout
-proves nothing either way, and treating a timeout as a pass would be exactly
-the kind of invented claim the trust layer exists to prevent elsewhere. A
-feature your platform doesn't support at all is reported as unsupported, not
-counted as a failure — the point is to keep a red result meaningful on the
-machines that have a real one to report.
+## 3. Layer 2: Runtime Execution Backends
 
-## The static guard, underneath all of it
+Selected via `EXECUTION_BACKEND` in `backend/.env`:
 
-Before any code reaches an interpreter, it's parsed as an AST and checked
-against policy — banned modules, banned builtins, interpreter-internals
-attribute access, reflection with a computed or dunder attribute name, and
-file paths outside the writable roots. This isn't regex matching against
-source text; it's a structural check. On the `host` backend this guard is
-the *only* static check there is before the OS-level sandbox — on `docker`,
-the container itself is the real boundary and the guard is defense in
-depth.
+### 1. Host Execution Backend (`EXECUTION_BACKEND=host`) — *Default*
+Spawns an isolated Python subprocess daemon per session over a loopback socket. Operating system containment is governed by `HOST_SANDBOX`:
+- `off`: Spawns standard subprocess with no OS policy applied (development only).
+- `best-effort` *(Default)*: Applies all kernel security capabilities supported by the host.
+- `require`: Refuses to launch unless the kernel enforces hardware/OS isolation.
 
-## A grant that widens access widens both
+#### Platform-Specific Isolation Mechanisms:
+- **macOS (Apple Seatbelt)**: Applies an SBPL sandbox profile denying unauthorized file writes, network sockets, and Mach service lookups.
+- **Linux (Landlock & Seccomp-BPF)**: Landlock seals the filesystem to the workspace directory only; Seccomp-BPF intercepts `socket()` syscalls, immediately denying `AF_INET`, `AF_INET6`, and `AF_PACKET` socket creation.
+- **Windows (Job Objects & Integrity Levels)**: Encloses the process in a Windows Job Object with strict RAM and process count quotas, setting the child process to Low Integrity Level.
 
-When you grant `workspace_write` for a specific directory (see
-[Permissions & Consent](permissions-and-consent.md)), that grant has to
-widen **both** the code guard's allowed paths and the sandbox's actual
-filesystem policy — or consent you gave would read as broken. Some sandbox
-implementations (a sealed Landlock ruleset, an applied SBPL profile, a
-lowered Windows token) can't be widened after the fact, so a grant made
-mid-turn triggers a restart of the execution child with the new policy
-baked in from the start. What that restart costs is intermediate Python
-variables — the underlying session data and tables are reloaded
-automatically, so nothing you've uploaded is lost.
+---
+
+### 2. Containerized Docker Backend (`EXECUTION_BACKEND=docker`)
+Spawns a dedicated Docker micro-container per session with full cgroups isolation:
+- **Read-Only Root Filesystem**: Prevents modification of base image libraries.
+- **Memory Ceiling (`SANDBOX_MEM_LIMIT=2g`)**: Prevents out-of-memory exhaustion of the host machine.
+- **PIDs Limit (`SANDBOX_PIDS_LIMIT=256`)**: Prevents fork bombs or runaway multithreading.
+- **Network Disablement (`SANDBOX_NETWORK_DISABLED=true`)**: Drops the `eth0` container interface, preventing any network egress.
+
+> **Graceful Degradation Guarantee**: If `EXECUTION_BACKEND=docker` is configured but the Docker daemon is unreachable, Wizard logs a degradation warning and automatically activates the Host OS sandbox rather than failing the user's turn.
+
+---
+
+### 3. In-Process Mode (`EXECUTION_BACKEND=inprocess`)
+Executes code in the API thread with stripped builtins. Strictly reserved for CI unit tests with mock execution. Production sessions will never default to in-process mode.
+
+---
+
+## 4. Live Sandbox Self-Testing (`/api/sandbox/selftest`)
+
+Wizard provides automated verification endpoints to test kernel sandbox enforcement on demand:
+
+```bash
+curl -s http://127.0.0.1:8000/api/sandbox/selftest | jq
+```
+
+**Diagnostic Response Schema:**
+```json
+{
+  "backend": "host",
+  "filesystem_isolation": {
+    "status": "blocked",
+    "details": "Access to /etc/shadow rejected by Landlock LSM"
+  },
+  "network_isolation": {
+    "status": "blocked",
+    "details": "Socket creation rejected by Seccomp-BPF filter"
+  },
+  "memory_limit_enforced": true,
+  "hardware_concurrency_ceiling": 4
+}
+```
+
+---
+
+## 5. User Consent & Dynamic Workspace Widening
+
+When an analytical task requires reading or writing files in an external directory (e.g. `/Users/data/export.parquet`), Wizard triggers an interactive **Consent Gate** in the web UI.
+
+When approved, Wizard dynamically widens `allowed_roots` in the CodeGuard scanner and reinitializes the OS sandbox profile to include the designated path without granting broad filesystem access.

@@ -1,63 +1,97 @@
-# Quickstart
+# 2-Minute Enterprise Quickstart
 
-This walks through your first question, once [Installation](installation.md)
-is done and the app is running at **http://localhost:3000**.
+This guide walks you through executing your first end-to-end analytical turn, observing sandboxed code execution, validating hallucination-resistant numerical grounding, and exporting production-ready analysis pipelines.
 
-## 1. Upload data
+---
 
-Drag a CSV, TSV, Excel, JSON, NDJSON, Parquet, or Feather file onto the
-composer, or connect a database — see [Connectors](../concepts/connectors.md).
-Large files are sampled for analysis while the full file stays available in
-the workspace. Every loaded table becomes addressable to generated code as
-`tables['name']`, so cross-table questions need no extra setup step.
+## Step 1: Launch the Control Plane
 
-## 2. Ask a real question
+Ensure Wizard is running via your preferred deployment channel:
 
-Type it in plain language — "which customer segment had the highest churn
-last quarter, and why" rather than "compute churn by segment". The point of
-the [agentic loop](../concepts/architecture.md) is that it's allowed to look
-before committing to an approach.
+```bash
+# If installed via Homebrew:
+wizard start
 
-## 3. Watch it work
+# If running standalone release:
+./cli/wizard start
 
-Every stage streams as it happens: the manager's reasoning, each move it
-makes and what it found, the generated code, the program's stdout, and the
-final answer token by token. If a step fails, you'll see the traceback and
-the retry — that's the [self-correction loop](../concepts/architecture.md),
-not a bug.
+# If running containerized stack:
+docker compose up -d
+```
 
-## 4. Pick a depth (optional)
+Navigate to **http://localhost:3000** in your browser. The web workspace will automatically connect over WebSockets to the backend control plane (`http://127.0.0.1:8000`).
 
-Three depths are available in the composer:
+---
 
-- **Fast** — one pass, no verification. Cheapest, least self-checking.
-- **Auto** (default) — the agent decides how much investigation the question
-  needs.
-- **Deep** — investigate thoroughly, with a decision round-trip on every
-  iteration and a verification pass at the end, regardless of model size.
+## Step 2: Ingest Datasets & Discover Schemas
 
-## 5. Read the trust signals, not just the answer
+Wizard supports streaming ingestion for structured and semi-structured formats without loading entire multi-gigabyte files into web browser memory:
 
-- Any number in the answer that doesn't trace back to real execution output
-  is flagged — the agent doesn't get to invent a figure that looks plausible.
-- Silent decisions the code made (dropped nulls, an inner join, a top-N cut,
-  a coerced date) are listed alongside the answer, because each one changes
-  what the number means.
-- The headline result is independently recomputed by a different route; a
-  mismatch is reported prominently rather than quietly resolved.
+1. **Drag-and-Drop Ingestion**: Drop CSV, Parquet, JSON/NDJSON, Excel (`.xlsx`), Feather, or TSV files directly into the workspace canvas.
+2. **Relational Database Connectors**: Alternatively, click **Add Connection** to mount PostgreSQL, MySQL, SQLite, DuckDB, ClickHouse, or Snowflake data warehouses.
+3. **Multi-Table Namespace**: Every ingested dataset is automatically indexed into the session catalog and exposed to generated Python scripts as:
+   ```python
+   # Addressable table dictionary
+   df = tables["sales_2026"]
+   customers = tables["dim_customers"]
+   ```
 
-## 6. Keep the work
+---
 
-Every analysis is written out as a runnable script you can re-run next month
-against fresh data — see [Exporting an Analysis](../guides/exporting-an-analysis.md).
-If you find yourself asking a structurally similar question again later,
-Wizard may offer to save it as a reusable [skill](../concepts/skills.md).
+## Step 3: Issue Natural-Language Analytical Inquiries
 
-## Where next
+Unlike basic SQL-generation wrappers, Wizard uses an iterative **Observe ➔ Decide ➔ Act** loop designed for open-ended, multi-step business inquiries:
 
-- [Architecture](../concepts/architecture.md) if you want to know what's
-  actually happening in that loop.
-- [Data Modes & Privacy](../concepts/data-modes-and-privacy.md) before you
-  point Wizard at anything sensitive and consider a cloud provider.
-- [Edge Cases & Gotchas](../troubleshooting/edge-cases.md) for the behaviors
-  that surprise people first.
+```text
+"Analyze our Q3 enterprise churn. Which customer segments experienced the highest contract downgrades, what are the primary statistical drivers, and how does discounting correlate with churn probability?"
+```
+
+### Selecting Execution Tier / Depth
+Select your desired analytical depth from the composer toolbar:
+- **Fast Tier**: 1 iteration pass, immediate exploratory statistics.
+- **Balanced Tier (Default)**: Multi-step investigation with schema probing, dynamic chart generation, and hypothesis validation.
+- **Deep Research Tier**: Full multi-turn investigation with automated competitive hypothesis testing, The Council adversarial review, and independent dual-route verification.
+
+---
+
+## Step 4: Inspect the Streaming Execution Cycle
+
+As the agent deliberates, the live UI streams each discrete step in real time:
+
+```
+[PLAN]      Manager forms 3-stage hypothesis on contract discounts vs churn.
+[CODE]      Worker writes vectorized pandas & scikit-learn logistic regression.
+[GUARD]     CodeGuard AST scan: 0 policy violations detected (safe).
+[SANDBOX]   Host Subprocess executed (124ms) — stdout captured.
+[SYNTHESIS] Manager synthesizes statistical findings with numerical citations.
+```
+
+If generated code triggers an unexpected exception (e.g. key mismatch or timestamp parsing error), Wizard's **Self-Correction Engine** catches the traceback, isolates the failure reason, and generates a corrected AST script without crashing the session.
+
+---
+
+## Step 5: Validate Trust & Numerical Provenance
+
+Enterprise compliance requires verifiable truth. Wizard implements three distinct trust gates on every analytical response:
+
+1. **Strict Provenance Pinning**: Every integer, float, and percentage cited in the final synthesis is traced to raw stdout / DataFrame outputs. Unreferenced numbers trigger a red warning badge.
+2. **Dual-Calculation Verification**: The core metric (e.g. `Churn Rate = 14.2%`) is independently recalculated through an alternate mathematical route to eliminate arithmetic artifacts.
+3. **Implicit Assumption Auditing**: The side panel surfaces all implicit data transformations (dropped NaN rows, coerced date formats, filtered outliers, or join cardinality choices).
+
+---
+
+## Step 6: Export & Automate
+
+Once satisfied with the findings:
+- **Export Reproducible Python Script**: Download a fully self-contained `.py` script that can be scheduled via Airflow, Prefect, or cron.
+- **Export Executive PDF / Markdown Report**: Generate a formatted evidence-backed report with embedded interactive charts.
+- **Promote to Skill**: Save the analytical pattern as a reusable corporate skill via `wizard skills` for your team.
+
+---
+
+## Next Steps
+
+- Explore the complete [CLI Reference Guide](cli.md) for automated scripting.
+- Review [Data Modes & Air-Gap Privacy](../concepts/data-modes-and-privacy.md) before connecting production databases.
+- Read [Execution Sandboxing & CodeGuard](../concepts/execution-and-sandboxing.md) to understand kernel isolation boundaries.
+

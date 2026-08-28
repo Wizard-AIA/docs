@@ -1,58 +1,97 @@
-# Configuration Reference
+# Enterprise Configuration Specification
 
-Wizard is configured through `backend/.env` (see `backend/.env.example` in
-the core repo for the full, current list with defaults). This page covers
-the settings you're most likely to actually need to touch — for the
-complete, byte-accurate list, the `.env.example` file itself is the source
-of truth; this page can drift, that file can't.
+Wizard derives its runtime behavior from environment variables, `backend/.env`, and local credential stores. This reference specifies all available configuration keys, data types, defaults, and architectural implications.
 
-## Providers and models
+---
 
-| Variable | What it does |
-|---|---|
-| `API_PROVIDER` | The **default** provider — not a global switch. You can still assign a different provider per role (manager/worker/vision). |
-| `MODEL_NAME` / `WORKER_MODEL_NAME` / `VISION_MODEL_NAME` | Empty by default, meaning "use whatever this provider has installed." Setting one pins it. |
-| `DATA_MODE` | `local-only` / `cloud-only` / `hybrid`. Empty means "derive it": `local-only` on a fresh install, `cloud-only` if `API_PROVIDER` is already a cloud backend. |
-| `DATA_SCHEMA_ONLY` | Defaults **on** — the conservative redaction option needs no explicit decision. |
-| `OLLAMA_BASE_URL` / `LMSTUDIO_BASE_URL` / `OPENAI_BASE_URL` / `ANTHROPIC_BASE_URL` / `GATEWAY_API_URL` | Provider endpoints. Rewritten from `host.docker.internal` to `127.0.0.1` automatically when the backend isn't containerized, unless you've set them yourself. |
+## 1. Configuration Resolution Precedence
 
-## Execution and sandboxing
+Settings resolve with deterministic precedence (highest to lowest):
 
-| Variable | What it does |
-|---|---|
-| `EXECUTION_BACKEND` | `host` (default, subprocess per session) / `docker` (container per session) / `inprocess` (dev/test only). `auto` and `local` are older spellings, folded to `host`. |
-| `HOST_SANDBOX` | `off` / `best-effort` (default) / `require`. See [Execution & Sandboxing](../concepts/execution-and-sandboxing.md). |
-| `HOST_SANDBOX_NETWORK` | `deny` (default) / `allow` — outbound only; loopback always works. |
-| `SANDBOX_TIER` | `core` / `standard` (default) / `full` — how much of the analysis toolkit the Docker image ships. |
-| `SANDBOX_ENABLED` | `false` disables container creation entirely. |
+```
+┌────────────────────────────────────────────────────────┐
+│ 1. Process Environment Variables (export KEY=value)    │  (Highest)
+├────────────────────────────────────────────────────────┤
+│ 2. Environment File (`backend/.env`)                   │
+├────────────────────────────────────────────────────────┤
+│ 3. Local Secure Credential Store (`credentials.json`)  │
+├────────────────────────────────────────────────────────┤
+│ 4. Hardware Auto-Sizing Defaults                       │  (Base)
+└────────────────────────────────────────────────────────┘
+```
 
-## Agent behavior
+---
 
-| Variable | What it does |
-|---|---|
-| `AGENT_TIER` | `auto` (default, inferred from the manager model's parameter count) / `compact` / `balanced` / `full`. |
-| `AGENT_MAX_ITERATIONS` | A hard ceiling above whatever the tier allows — deliberately not auto-derived, since a runaway loop against a paid gateway is a billing incident. |
-| `AGENT_REQUIRE_APPROVAL` | Turn plan-approval on. Off by default. |
-| `AGENT_TURN_TIMEOUT` | Wall-clock deadline per turn. |
-| `MAX_TOKENS` | The ceiling every per-purpose output budget is clamped to — lower this if you're tight on context, not the other way around. |
+## 2. LLM Inference & Provider Configuration
 
-## Host sizing
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `API_PROVIDER` | `string` | `ollama` | Default inference provider: `ollama`, `lmstudio`, `gemini`, `anthropic`, `openai`, or `custom_gateway`. |
+| `DATA_MODE` | `string` | `local-only` | Session privacy mode: `local-only` (100% air-gapped), `hybrid` (redacted), or `cloud-only`. |
+| `MODEL_NAME` | `string` | `""` | Pins the Manager reasoning model (e.g. `gemini-2.5-flash`, `qwen2.5:3b`). Empty = use provider default. |
+| `WORKER_MODEL_NAME` | `string` | `""` | Pins the Worker coding model (e.g. `gemini-2.5-flash`, `qwen2.5-coder:7b`). |
+| `VISION_MODEL_NAME` | `string` | `""` | Model used for visual chart inspection and aesthetic critique (e.g. `llama3.2-vision`). |
+| `TEMPERATURE` | `float` | `0.0` | Sampling temperature for analytical determinism. |
+| `MAX_TOKENS` | `int` | `4096` | Upper token generation limit per completion turn. |
+| `LLM_KEEP_ALIVE` | `string` | `30m` | How long local inference engines (Ollama) keep weights loaded in VRAM between manager/worker turns. |
+| `LLM_NUM_THREAD` | `int` | `0 (auto)` | CPU inference threads. Auto-derived from physical core count to eliminate memory bus contention. |
+| `LLM_NUM_CTX` | `int` | `0 (auto)` | KV cache context window requested from Ollama (e.g. `8192` or `16384`). |
+| `LLM_REQUEST_TIMEOUT`| `int` | `300` | HTTP client timeout in seconds for long-context inferences. |
 
-| Variable | What it does |
-|---|---|
-| `SYSTEM_PROFILE` | `auto` (default) measures your machine at boot and derives thread counts, worker counts, and memory limits from it. |
-| `LLM_NUM_THREAD` / `LLM_NUM_CTX` | Left unset in the shipped example on purpose — setting either in a copied `.env` defeats the auto-derivation on every machine that copies it. |
+---
 
-## Skills
+## 3. Cloud Provider & Gateway Authentication
 
-| Variable | What it does |
-|---|---|
-| `SKILLS_BUILTIN_DIR` / `SKILLS_PROJECT_DIR` | Empty by default, meaning "derive it" (the checkout's `backend/skills/` and `.wizard/skills`). The user layer is never configurable — always your platform config directory, so one machine's layout can't leak into `.env.example` and confuse another. |
-| `SKILLS_REGISTRY_API` | Left commented by default (`api.github.com` is correct for most installs) — set it for GitHub Enterprise. |
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `GEMINI_API_KEY` | `string` | `""` | Google Gemini API key. Enables Gemini 2.5 Flash / Pro and Google Embeddings. |
+| `ANTHROPIC_API_KEY` | `string` | `""` | Anthropic Claude API key for Claude 3.5 Sonnet / Haiku. |
+| `OPENAI_API_KEY` | `string` | `""` | OpenAI platform API key for GPT-4o and OpenAI text embeddings. |
+| `GATEWAY_API_URL` | `string` | `""` | Base URL for custom OpenAI-compatible gateways (Groq, Together AI, OpenRouter, vLLM). |
+| `GATEWAY_API_KEY` | `string` | `""` | Bearer authorization token for the custom gateway endpoint. |
+| `OLLAMA_BASE_URL` | `string` | `http://127.0.0.1:11434` | Local Ollama daemon REST endpoint. |
+| `LMSTUDIO_BASE_URL` | `string` | `http://127.0.0.1:1234/v1` | Local LM Studio OpenAI-compatible endpoint. |
 
-## What's deliberately *not* here
+---
 
-Repo/API secrets (model provider API keys, connector credentials) are
-resolved from the environment first, then a local credential store — never
-logged, never returned by any route. See
-[Data Modes & Privacy](../concepts/data-modes-and-privacy.md#credentials).
+## 4. Sandboxing & Runtime Execution Controls
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `EXECUTION_BACKEND` | `string` | `host` | Where Python code executes: `host` (subprocess), `docker` (container), or `inprocess` (CI only). |
+| `HOST_SANDBOX` | `string` | `best-effort` | OS kernel containment policy: `off`, `best-effort`, or `require` (refuses to start uncontained). |
+| `HOST_SANDBOX_NETWORK`| `string` | `deny` | Outbound network egress for generated code: `deny` or `allow`. Loopback always permitted. |
+| `SANDBOX_TIER` | `string` | `standard` | Pre-installed data science image toolkit: `core` (pandas/duckdb), `standard` (+scikit-learn/scipy), `full` (+geopandas/lifelines). |
+| `SANDBOX_MEM_LIMIT` | `string` | `2g` | Cgroup memory ceiling for sandbox containers. |
+| `SANDBOX_CPU_QUOTA` | `int` | `0` | CPU quota in microseconds (`100000` = 1 core, `0` = unrestricted). |
+| `SANDBOX_PIDS_LIMIT` | `int` | `256` | Maximum simultaneous child processes per sandbox. |
+| `SANDBOX_EXEC_TIMEOUT`| `int` | `180` | Wall-clock execution timeout in seconds before code is forcefully interrupted. |
+
+---
+
+## 5. Agentic Loop & Orchestration Parameters
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `AGENT_TIER` | `string` | `auto` | Reasoning budget depth: `auto` (derived from model size), `compact` (4 steps), `balanced` (12 steps), `full` (24 steps). |
+| `AGENT_MAX_ITERATIONS`| `int` | `24` | Hard ceiling for agent turn iterations to prevent runaway gateway billing. |
+| `AGENT_REQUIRE_APPROVAL`| `bool` | `false` | When true, pauses execution after the planning stage for explicit user plan sign-off. |
+| `AGENT_PERMISSION_PROFILE`| `string`| `ask-always`| Policy for external actions: `auto-approve`, `ask-always`, or `custom`. |
+| `AGENT_VERIFY` | `bool` | `true` | When true, independently recomputes the headline analytical figure via an alternate route. |
+| `AGENT_GROUNDING_CHECK`| `bool` | `true` | Pins final textual numbers against raw execution stdout to eliminate hallucinations. |
+| `AGENT_TURN_TIMEOUT` | `float` | `300.0` | Total turn wall-clock deadline in seconds. |
+
+---
+
+## 6. System Profiling & Network Security
+
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `SYSTEM_PROFILE` | `string` | `server` | Hardware sizing profile: `server`, `workstation`, or `laptop`. |
+| `CORS_ALLOW_ORIGINS` | `string` | `http://localhost:3000` | Comma-separated allowlist for browser cross-origin requests. |
+| `API_KEY` | `string` | `""` | When set, all mutating control plane routes require the `X-API-Key` HTTP header. |
+| `SESSION_MAX_ACTIVE` | `int` | `8` | Maximum concurrent analytical sessions before queueing. |
+| `QUEUE_BACKEND` | `string` | `inprocess` | Job queue engine: `inprocess` or `redis`. |
+| `CACHE_BACKEND` | `string` | `inprocess` | Semantic trajectory cache engine: `inprocess` or `redis`. |
+| `PLOT_FORMAT` | `string` | `html` | Chart output format: `html` (interactive Plotly DOM) or `png` (static matplotlib). |
+

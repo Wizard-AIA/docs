@@ -4,11 +4,11 @@ import { Navigation } from "@/components/landing/navigation"
 import { FooterSection } from "@/components/landing/footer-section"
 import { CopyCommand } from "@/components/copy-command"
 import { Reveal } from "@/components/reveal"
-import { DOCS_URL } from "@/lib/wizard"
+import { Terminal, Shield, Cpu, RefreshCw, Zap, Layers, AlertCircle, CheckCircle2 } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "CLI Reference",
-  description: "Complete command-line interface guide for Wizard: init, start, stop, doctor, status, and skill management subcommands.",
+  title: "Enterprise CLI Reference — wizard",
+  description: "Complete command-line interface specification for Wizard: init, start, stop, doctor, attach, logs, update, skills, and environment orchestration.",
   alternates: {
     canonical: "/cli",
   },
@@ -17,82 +17,152 @@ export const metadata: Metadata = {
 const CLI_COMMANDS = [
   {
     command: "wizard init",
+    badge: "Lifecycle",
+    summary: "Bootstraps local environment, verifies toolchain, creates virtualenv, and compiles workbenches.",
     description:
-      "Checks Python 3.12+/Node 20+/uv/pnpm (and optional Ollama) are on PATH; copies backend/.env.example, creates a managed venv, installs backend requirements, builds the frontend's production bundle. --pull-models also pulls a default manager/worker pair.",
+      "Validates Python 3.11+, Node 20+, uv, pnpm, and optional Ollama/Docker. Copies backend/.env.example if missing, builds the Next.js production frontend bundle, and registers service defaults.",
+    flags: [
+      { flag: "--provider <name>", desc: "Primary LLM provider (ollama, lmstudio, gemini, anthropic, openai, custom_gateway)" },
+      { flag: "--data-mode <mode>", desc: "Data residency policy (local-only, hybrid, cloud-only)" },
+      { flag: "--gemini-key <key>", desc: "Sets Google Gemini API key" },
+      { flag: "--anthropic-key <key>", desc: "Sets Anthropic Claude API key" },
+      { flag: "--openai-key <key>", desc: "Sets OpenAI API key" },
+      { flag: "--gateway-url <url>", desc: "Endpoint URL for custom OpenAI-compatible gateway (Groq, vLLM, OpenRouter)" },
+      { flag: "--gateway-key <key>", desc: "Bearer authorization token for custom gateway" },
+      { flag: "--pull-models", desc: "Triggers automated background pull of default reasoning & coding weights via Ollama" },
+      { flag: "--skip-frontend", desc: "Skips Node.js dependency installation and frontend bundle compilation" },
+      { flag: "--skip-backend", desc: "Skips Python virtualenv creation and package installation" },
+    ],
   },
   {
     command: "wizard start",
+    badge: "Supervisor",
+    summary: "Spawns detached background supervisor, starts control plane & frontend, and opens the browser.",
     description:
-      "Launches backend + frontend as a detached background supervisor, waits until the backend answers healthy, checks API version compatibility, opens a browser. --backend-port/--frontend-port override 8000/3000; --no-browser skips opening one.",
+      "Spawns the detached supervisor daemon (__supervise). Polls backend readiness, performs API compatibility handshakes, rotates logs at 10MB bounds, and forwards OS signals.",
+    flags: [
+      { flag: "--backend-port <port>", desc: "Overrides backend control plane port (default: 8000)" },
+      { flag: "--frontend-port <port>", desc: "Overrides analytics workbench port (default: 3000)" },
+      { flag: "--no-browser", desc: "Suppresses automatic browser launch upon successful boot" },
+      { flag: "--provider <name>", desc: "Overrides active LLM provider for this execution run" },
+      { flag: "--data-mode <mode>", desc: "Overrides privacy data mode for this execution run" },
+    ],
   },
   {
     command: "wizard stop",
-    description: "Idempotent. Asks the supervisor to stop and waits for cleanup; falls back to a forced kill of recorded pids.",
+    badge: "Supervisor",
+    summary: "Gracefully terminates all background services and execution daemons.",
+    description:
+      "Idempotent process cleanup. Sends SIGTERM to supervisor and process groups; falls back to forced termination of recorded PIDs if processes fail to exit within deadline.",
+    flags: [],
   },
   {
-    command: "wizard status / wizard doctor",
+    command: "wizard doctor",
+    badge: "Diagnostics",
+    summary: "Performs full operational health audit and diagnostics check.",
     description:
-      "Same command. Local checks (what's running, log sizes, API_PROVIDER/DATA_MODE, EXECUTION_BACKEND) plus a render of the backend's own GET /api/config.",
+      "Inspects supervisor PID files, active network listeners, log disk usage, OS kernel sandbox enforcement (Landlock, seccomp, Apple Seatbelt), and live backend /api/config state.",
+    flags: [],
+  },
+  {
+    command: "wizard status",
+    badge: "Diagnostics",
+    summary: "Alias for wizard doctor. Reports cluster state and active configurations.",
+    description: "Renders active service status, uptime, PID mapping, and data mode policies.",
+    flags: [],
   },
   {
     command: "wizard attach",
-    description: "Prints status, then follows backend.log/frontend.log live, source-prefixed, until Ctrl+C. Read-only.",
+    badge: "Observability",
+    summary: "Multiplexes and live-streams backend and frontend logs to terminal.",
+    description:
+      "Connects to rotating log streams, rendering real-time colored output with source prefixes (backend/frontend) until Ctrl+C.",
+    flags: [],
   },
   {
     command: "wizard logs",
-    description: "One-shot: prints the log file paths; --tail N also prints the last N lines of each.",
+    badge: "Observability",
+    summary: "Prints log file paths and dumps recent output lines.",
+    description: "One-shot diagnostic tool to inspect log locations and recent crash/event markers.",
+    flags: [
+      { flag: "--tail <N>", desc: "Outputs the last N lines across backend.log and frontend.log" },
+    ],
   },
   {
     command: "wizard update",
+    badge: "Lifecycle",
+    summary: "Pulls latest Git revisions, updates dependencies, and restarts services.",
     description:
-      "git pull --ff-only, reinstalls dependencies the same way init does, re-checks the compat marker. Restarts the daemon afterward if it was running before.",
+      "Executes git pull --ff-only, updates lockfile dependencies via uv/pnpm, verifies compatibility targets, and restarts active supervisor daemons.",
+    flags: [],
   },
   {
-    command: "wizard skills add/list/update/discard/remove/token",
-    description: "Fronts the built-in skill installer — fetch, pin to a commit, show contents, ask before writing.",
+    command: "wizard skills",
+    badge: "Ecosystem",
+    summary: "Manages modular corporate analytical skills and domain playbooks.",
+    description:
+      "Fronts the declarative skill engine with static AST security verification and commit pinning.",
+    flags: [
+      { flag: "list", desc: "Lists all installed skills, source repositories, and active tiers" },
+      { flag: "add <url>", desc: "Installs a remote skill repository with AST preview and commit pinning" },
+      { flag: "update <name>", desc: "Updates an installed skill to latest remote revision" },
+      { flag: "discard <name>", desc: "Discards local modifications to an installed skill" },
+      { flag: "remove <name>", desc: "Safely uninstalls and deletes a skill package" },
+      { flag: "token <token>", desc: "Saves GitHub Personal Access Token for private enterprise skill repos" },
+    ],
+  },
+  {
+    command: "wizard env",
+    badge: "Configuration",
+    summary: "Validates and displays resolved runtime configuration settings.",
+    description: "Inspects effective environment settings across .env, system environment, and credentials store.",
+    flags: [],
   },
   {
     command: "wizard version",
-    description: "Prints this binary's compiled-in compat version.",
+    badge: "Metadata",
+    summary: "Outputs CLI binary version, build hash, and backend API target.",
+    description: "Displays compile-time compatibility markers (e.g. wizard CLI, backend API compat v4.0.0).",
+    flags: [],
   },
 ]
 
 const SETUP_RECIPES = [
   {
-    name: "Local-only",
-    tagline: "Nothing leaves your machine. No API key.",
-    command: "wizard init",
+    name: "100% Air-Gapped / Local-Only",
+    icon: Shield,
+    tagline: "Zero data egress. Hard barrier against cloud endpoints.",
+    command: "wizard init --data-mode local-only --provider ollama --pull-models",
+    notes: "Requires local Ollama or LM Studio instance. Automatically pulls reasoning & coding models.",
   },
   {
-    name: "Hybrid",
-    tagline: "Keep local models, make a cloud key available for either role.",
-    command: "wizard init --data-mode hybrid --anthropic-key sk-ant-...",
+    name: "Cloud-Native (Gemini / Claude / OpenAI)",
+    icon: Zap,
+    tagline: "Frontier cloud intelligence with telemetry tracking.",
+    command: "wizard init --provider gemini --gemini-key AQ.Ab8RN6... --data-mode cloud-only",
+    notes: "Dispatches planning and code generation directly to Gemini 2.5 Flash with sub-second latency.",
   },
   {
-    name: "Cloud-only",
-    tagline: "No local weights needed — Anthropic, OpenAI, Gemini, or any gateway.",
-    command: "wizard init --provider anthropic --anthropic-key sk-ant-...",
+    name: "Enterprise Hybrid Mode",
+    icon: Layers,
+    tagline: "Cloud reasoning with strict row-level data redaction.",
+    command: "wizard init --data-mode hybrid --anthropic-key sk-ant-... --provider anthropic",
+    notes: "Raw datasets remain strictly on host; only masked schemas and metadata reach the cloud manager.",
   },
   {
-    name: "Any OpenAI-compatible gateway",
-    tagline: "Groq, OpenRouter, Together, vLLM.",
+    name: "Custom OpenAI-Compatible Gateway",
+    icon: Cpu,
+    tagline: "Connect Groq, Together AI, OpenRouter, vLLM, or internal corporate LLM gateways.",
     command: "wizard init --provider custom_gateway --gateway-url https://api.groq.com/openai/v1 --gateway-key gsk_...",
+    notes: "Supports any endpoint implementing the standard OpenAI chat completions wire protocol.",
   },
 ]
 
-const ENV_KEYS = [
-  { key: "API_PROVIDER", value: "ollama", purpose: "Default backend: ollama, lmstudio, anthropic, openai, gemini or custom_gateway" },
-  { key: "DATA_MODE", value: '"" (derives)', purpose: "local-only, hybrid or cloud-only — what may leave this machine" },
-  { key: "MODEL_NAME", value: '""', purpose: "Pin the reasoning model. Empty = use what the provider has" },
-  { key: "WORKER_MODEL_NAME", value: '""', purpose: "Pin the code model. Empty = use what the provider has" },
-  { key: "AGENT_TIER", value: "auto", purpose: "auto, compact, balanced or full — how long an investigation may run" },
-  { key: "AGENT_VERIFY", value: "True", purpose: "Recompute the headline result a second way" },
-  { key: "EXECUTION_BACKEND", value: "host", purpose: "host (subprocess, no Docker), docker or inprocess" },
-  { key: "SANDBOX_TIER", value: "standard", purpose: "core, standard or full — how much toolkit the image installs" },
-  { key: "HOST_SANDBOX", value: "best-effort", purpose: "off, best-effort or require — OS containment for the host runtime" },
-  { key: "PLOT_FORMAT", value: "html", purpose: "html for interactive Plotly, png for static" },
-  { key: "CORS_ALLOW_ORIGINS", value: "http://localhost:3000", purpose: "Comma-separated allowlist" },
-  { key: "API_KEY", value: '""', purpose: "When set, mutating routes require X-API-Key" },
+const EXIT_CODES = [
+  { code: "0", name: "SUCCESS", description: "Operation completed successfully." },
+  { code: "1", name: "GENERAL_ERROR", description: "Operational or runtime error. Inspect wizard doctor for root cause." },
+  { code: "2", name: "PORT_CONFLICT", description: "Port 8000 or 3000 is occupied by an external process." },
+  { code: "3", name: "DEPENDENCY_MISSING", description: "Required prerequisite (Python 3.12, Node 20, or uv) was not found on PATH." },
 ]
 
 export default function CliPage() {
@@ -100,125 +170,161 @@ export default function CliPage() {
     <main className="relative min-h-screen overflow-x-hidden">
       <Navigation />
 
-      <section className="max-w-[900px] mx-auto px-4 sm:px-6 lg:px-12 pt-32 sm:pt-40 pb-24">
+      <section className="max-w-[1000px] mx-auto px-4 sm:px-6 lg:px-12 pt-32 sm:pt-40 pb-24">
+        {/* Header */}
         <Reveal>
-          <span className="inline-flex items-center gap-3 text-xs sm:text-sm font-mono text-muted-foreground mb-6">
-            <span className="w-6 sm:w-8 h-px bg-foreground/30" />
-            Reference
-          </span>
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display tracking-tight mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/10 bg-white/5 text-xs font-mono text-[#eca8d6] mb-6">
+            <Terminal className="w-3.5 h-3.5" />
+            CLI Reference Manual v4.0.0
+          </div>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-display tracking-tight mb-4 text-white">
             The wizard CLI.
           </h1>
-          <p className="text-lg text-muted-foreground max-w-xl">
-            A single static binary that manages the backend and frontend as a background
-            service — the same subcommands on Linux, macOS and Windows.
+          <p className="text-lg text-white/60 max-w-2xl leading-relaxed">
+            A single static Go binary that manages the backend control plane, Python sandboxes, and Next.js workbenches as background services across macOS, Linux, and Windows.
           </p>
         </Reveal>
 
+        {/* Installation banner */}
+        <Reveal className="mt-10 p-5 rounded-xl border border-white/10 bg-black/60 backdrop-blur-md">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <div className="text-xs font-mono uppercase tracking-wider text-white/40 mb-1">Global Installation via Homebrew</div>
+              <div className="text-sm text-white/80 font-medium">Install Wizard globally with a single command</div>
+            </div>
+            <div className="w-full sm:w-auto">
+              <CopyCommand command="brew tap Wizard-AIA/wizard && brew install wizard" />
+            </div>
+          </div>
+        </Reveal>
+
+        {/* Subcommands list */}
         <div className="mt-16">
           <Reveal>
-            <h2 className="text-2xl font-display mb-6">Subcommands</h2>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-display text-white">Command Reference</h2>
+              <span className="text-xs font-mono text-white/40">10 Subcommands</span>
+            </div>
           </Reveal>
-          <div className="border border-border divide-y divide-border">
+          
+          <div className="border border-white/10 rounded-xl overflow-hidden divide-y divide-white/10 bg-black/40">
             {CLI_COMMANDS.map((cmd, i) => (
-              <Reveal key={cmd.command} delay={i * 40} as="div" className="p-5">
-                <code className="text-sm font-mono text-foreground">{cmd.command}</code>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{cmd.description}</p>
+              <Reveal key={cmd.command} delay={i * 30} as="div" className="p-6">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <code className="text-base font-mono font-semibold text-[#eca8d6] bg-white/5 px-2.5 py-1 rounded-md border border-white/10">
+                    {cmd.command}
+                  </code>
+                  <span className="text-[11px] font-mono uppercase tracking-wider px-2 py-0.5 rounded bg-white/10 text-white/60">
+                    {cmd.badge}
+                  </span>
+                </div>
+                <div className="text-sm font-medium text-white/90 mb-1.5">{cmd.summary}</div>
+                <p className="text-sm text-white/60 leading-relaxed mb-4">{cmd.description}</p>
+                
+                {cmd.flags && cmd.flags.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-white/5">
+                    <div className="text-[11px] font-mono uppercase tracking-wider text-white/40 mb-2">Flags &amp; Options</div>
+                    <div className="grid grid-cols-1 gap-1.5">
+                      {cmd.flags.map((f) => (
+                        <div key={f.flag} className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 text-xs">
+                          <code className="font-mono text-white/90 shrink-0 font-medium">{f.flag}</code>
+                          <span className="text-white/50">{f.desc}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Reveal>
             ))}
           </div>
         </div>
 
-        <div className="mt-16">
+        {/* Setup recipes */}
+        <div className="mt-20">
           <Reveal>
-            <h2 className="text-2xl font-display mb-2">Setup recipes</h2>
-            <p className="text-sm text-muted-foreground mb-6">
-              <span className="font-mono">wizard init</span> configures a local, hybrid or fully
-              cloud install in one run — every flag is also safe to run again against an
-              already-configured <span className="font-mono">backend/.env</span>.
+            <div className="flex items-center gap-2 mb-2">
+              <RefreshCw className="w-5 h-5 text-[#eca8d6]" />
+              <h2 className="text-2xl font-display text-white">Production Deployment Recipes</h2>
+            </div>
+            <p className="text-sm text-white/60 mb-8 max-w-xl">
+              One-line configuration recipes to initialize Wizard for strict air-gapped security, enterprise cloud providers, or custom internal model gateways.
             </p>
           </Reveal>
-          <div className="space-y-6">
-            {SETUP_RECIPES.map((recipe, i) => (
-              <Reveal key={recipe.name} delay={i * 60}>
-                <h3 className="text-sm font-medium mb-1">{recipe.name} — {recipe.tagline}</h3>
-                <CopyCommand command={recipe.command} />
-              </Reveal>
-            ))}
+
+          <div className="grid grid-cols-1 gap-6">
+            {SETUP_RECIPES.map((recipe, i) => {
+              const Icon = recipe.icon
+              return (
+                <Reveal key={recipe.name} delay={i * 50} className="p-6 rounded-xl border border-white/10 bg-black/50 backdrop-blur-md">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-[#eca8d6]">
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-white">{recipe.name}</h3>
+                      <div className="text-xs text-white/50">{recipe.tagline}</div>
+                    </div>
+                  </div>
+                  <div className="my-3.5">
+                    <CopyCommand command={recipe.command} />
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-white/40">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-[#eca8d6]" />
+                    <span>{recipe.notes}</span>
+                  </div>
+                </Reveal>
+              )
+            })}
           </div>
         </div>
 
-        <Reveal className="mt-16">
-          <h2 className="text-2xl font-display mb-2">Configuration</h2>
-          <p className="text-sm text-muted-foreground mb-6">
-            Copy <span className="font-mono">backend/.env.example</span> to{" "}
-            <span className="font-mono">backend/.env</span>. Everything has a working default.
-          </p>
-          <div className="overflow-x-auto rounded-lg border border-border">
+        {/* Exit codes */}
+        <div className="mt-20">
+          <Reveal>
+            <div className="flex items-center gap-2 mb-2">
+              <AlertCircle className="w-5 h-5 text-[#eca8d6]" />
+              <h2 className="text-2xl font-display text-white">Exit Codes &amp; Automation</h2>
+            </div>
+            <p className="text-sm text-white/60 mb-6">
+              Standard POSIX exit codes returned by the CLI binary for CI/CD scripting and container health checks.
+            </p>
+          </Reveal>
+
+          <div className="overflow-x-auto rounded-xl border border-white/10 bg-black/40">
             <table className="w-full text-sm">
-              <thead className="bg-secondary/60">
-                <tr className="text-left">
-                  <th className="px-4 py-3 font-medium">Key</th>
-                  <th className="px-4 py-3 font-medium">Default</th>
-                  <th className="px-4 py-3 font-medium">Purpose</th>
+              <thead className="border-b border-white/10 bg-white/5">
+                <tr className="text-left text-xs font-mono uppercase tracking-wider text-white/40">
+                  <th className="px-4 py-3">Code</th>
+                  <th className="px-4 py-3">Symbol</th>
+                  <th className="px-4 py-3">Meaning</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
-                {ENV_KEYS.map((row) => (
-                  <tr key={row.key}>
-                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-foreground">{row.key}</td>
-                    <td className="px-4 py-3 font-mono text-xs whitespace-nowrap text-muted-foreground">{row.value}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{row.purpose}</td>
+              <tbody className="divide-y divide-white/5">
+                {EXIT_CODES.map((row) => (
+                  <tr key={row.code}>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold text-[#eca8d6]">{row.code}</td>
+                    <td className="px-4 py-3 font-mono text-xs text-white/80">{row.name}</td>
+                    <td className="px-4 py-3 text-xs text-white/60">{row.description}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            Resource limits — <span className="font-mono">LLM_NUM_THREAD</span>,{" "}
-            <span className="font-mono">SANDBOX_MEM_LIMIT</span>,{" "}
-            <span className="font-mono">SESSION_MAX_ACTIVE</span> — are left unset on purpose.
-            They&apos;re derived from the machine at boot; setting one pins it.
-          </p>
-        </Reveal>
-
-        <div className="mt-16">
-          <Reveal>
-            <h2 className="text-2xl font-display mb-6">Common issues</h2>
-          </Reveal>
-          <div className="space-y-6">
-            <Reveal>
-              <h3 className="text-sm font-medium mb-1">A question takes many minutes, or never finishes</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Check whether <span className="font-mono text-foreground">MODEL_NAME</span> is a reasoning
-                model (<span className="font-mono">deepseek-r1</span>, <span className="font-mono">qwq</span>) —
-                by far the most common cause. Use a plain instruct model for the manager role; a reasoning
-                model is fine as the worker.
-              </p>
-            </Reveal>
-            <Reveal delay={60}>
-              <h3 className="text-sm font-medium mb-1">Is LLM_NUM_THREAD set in backend/.env?</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Delete it. Local inference is memory-bandwidth bound, so more threads than physical cores
-                is contention, not throughput. Unset, it&apos;s measured from the machine.
-              </p>
-            </Reveal>
-            <Reveal delay={120}>
-              <h3 className="text-sm font-medium mb-1">&quot;Local subprocess&quot; instead of &quot;Docker container&quot;</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Docker is unreachable, so code runs in a subprocess of the backend — bounded, interruptible,
-                and it keeps variables between steps, but not isolated from your filesystem.
-              </p>
-            </Reveal>
-          </div>
         </div>
 
-        <Reveal className="mt-16 pt-8 border-t border-border">
+        {/* Footer links */}
+        <Reveal className="mt-20 pt-8 border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
           <Link
-            href={`${DOCS_URL}/getting-started/cli`}
-            className="text-sm underline underline-offset-4 hover:text-foreground transition-colors"
+            href="/docs/getting-started/cli"
+            className="text-sm font-medium text-white/80 hover:text-white transition-colors flex items-center gap-1.5"
           >
-            Full CLI guide in the docs →
+            Deep CLI Architecture &amp; Supervisor Docs →
+          </Link>
+          <Link
+            href="/docs/reference/configuration"
+            className="text-sm font-medium text-white/50 hover:text-white transition-colors"
+          >
+            Complete .env Configuration Matrix →
           </Link>
         </Reveal>
       </section>

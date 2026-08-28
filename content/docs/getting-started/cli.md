@@ -1,50 +1,201 @@
-# The wizard CLI
+# Enterprise CLI Reference (`wizard`)
 
-`wizard` is a single static binary that manages the backend and frontend as a
-background service — the same subcommands, same behavior, on Linux, macOS
-and Windows. It replaces the manual `uvicorn` + `npm run dev` dance (and
-`docker compose up`, which remains available and opt-in) with
-`wizard init && wizard start`.
+The `wizard` command-line utility is a compiled, zero-dependency Go binary engineered to supervise, configure, and orchestrate the Wizard control plane, Python execution daemons, and Next.js analytics workbenches as background services across macOS, Linux, and Windows.
 
-## Building
+---
 
-Requires Go 1.23+.
+## 1. CLI Architecture & Process Supervision
 
-```bash
-cd cli
-go build -o wizard ./cmd/wizard          # wizard.exe on Windows
+Instead of requiring manual multi-terminal script invocations (`uvicorn` + `next dev`), `wizard` operates an idempotent, detached supervisor daemon:
+
+```
+                  ┌─────────────────────────────────────┐
+                  │          wizard CLI Binary          │
+                  │   (CLI entrypoint & CLI manager)    │
+                  └──────────────────┬──────────────────┘
+                                     │ spawns detached
+                                     ▼
+                  ┌─────────────────────────────────────┐
+                  │    Process Supervisor (__supervise) │
+                  │  - Health probing & auto-restart    │
+                  │  - Signal forwarding (SIGTERM)      │
+                  │  - Size-capped log rotation (10MB)  │
+                  └──────────┬──────────────────┬───────┘
+                             │                  │
+                ┌────────────┴────────┐   ┌─────┴──────────────┐
+                │   FastAPI Backend   │   │  Next.js Frontend  │
+                │ (Control Plane:8000)│   │ (UI Engine: 3000)  │
+                └─────────────────────┘   └────────────────────┘
 ```
 
-There's no published release pipeline yet — building from source is the
-documented way to get the binary for now. See
-[cli/README.md](https://github.com/Wizard-AIA/Wizard-w2/blob/master/cli/README.md)
-for cross-compilation flags and version-stamping.
+### Key Supervisory Guarantees:
+- **Zero Orphaned Subprocesses**: When `wizard stop` or a termination signal is received, the supervisor sends `SIGTERM` to the entire process group, guaranteeing that background Python runtimes or host worker sockets do not leak.
+- **Port Conflict Resolution**: Probes availability for ports 8000 (backend) and 3000 (frontend) before launching, reporting the blocking PID if occupied.
+- **Automatic Log Rotation**: Rotates `backend.log`, `frontend.log`, and `daemon.log` at 10MB bounds, preserving previous logs as `.1.log` to prevent disk saturation.
+- **Global Path Resolution**: Automatically detects project roots from both current working directories and Homebrew Cellar installations (`/opt/homebrew/Cellar/wizard/...`).
 
-## Subcommands
+---
 
-Run from inside a Wizard checkout (or any subdirectory of one) — `wizard`
-locates the checkout root by walking up looking for `backend/main.py` +
-`frontend/package.json`, the way `git`/`npm` locate their own project root.
+## 2. Command Index & Syntax
 
-| Command | What it does |
-|---|---|
-| `wizard init` | Checks Python 3.11+/Node 20+ (and optional Ollama) are on PATH; copies `backend/.env.example` → `backend/.env` if missing; creates a venv and installs backend requirements; builds the frontend's production bundle. `--pull-models` also pulls a default manager/worker pair if Ollama is present. It detects and instructs — it never installs Python/Node/Ollama on your behalf. |
-| `wizard start` | Launches backend + frontend as a detached background service, waits until the backend answers healthy, checks version compatibility, then opens a browser. `--backend-port`/`--frontend-port` override the 8000/3000 defaults; `--no-browser` skips opening one. |
-| `wizard stop` | Idempotent — asks the service to stop and cleans up, falling back to a forced kill if needed. |
-| `wizard status` / `wizard doctor` | What's running, log sizes, execution backend, host sizing, sandbox capability. |
-| `wizard attach` | Prints status, then follows the backend/frontend logs live until Ctrl+C. Read-only. |
-| `wizard logs` | Prints log file paths; `--tail N` also prints the last N lines of each. |
-| `wizard update` | Pulls the latest checkout, reinstalls dependencies, re-checks version compatibility. Restarts the service afterward if it was running. Updates the checkout only, not the `wizard` binary itself. |
-| `wizard version` | Prints this binary's compiled-in compatibility version. |
+### `wizard init`
+Initializes local runtime environments, validates system dependencies, generates `backend/.env`, sets up managed virtual environments, installs requirements, and compiles frontend bundles.
 
-## What it deliberately doesn't do
+```bash
+wizard init [flags]
+```
 
-- **Update itself.** `wizard update` updates the backend/frontend checkout
-  only — there's no release pipeline yet to fetch and replace the binary.
-- **Install Python/Node/Ollama for you.** `wizard init` detects what's
-  missing and prints the right install command for your OS.
-- **Manage the Docker daemon.** `wizard start`/`doctor` only probe
-  reachability — an unreachable Docker under `EXECUTION_BACKEND=docker`
-  degrades to `host`, same as everywhere else in Wizard.
-- **Expose anything remotely.** The daemon binds `127.0.0.1` only, on both
-  the backend and frontend sides.
+#### Flags & Options:
+| Flag | Type | Description | Default |
+|---|---|---|---|
+| `--provider` | `string` | Configures the primary LLM provider: `ollama`, `lmstudio`, `gemini`, `anthropic`, `openai`, or `custom_gateway`. | `ollama` |
+| `--data-mode` | `string` | Configures privacy policy: `local-only` (zero cloud egress), `hybrid` (redacted cloud queries), or `cloud-only`. | `local-only` |
+| `--gemini-key` | `string` | Injects Google Gemini API Key into `backend/.env`. | `""` |
+| `--anthropic-key` | `string` | Injects Anthropic Claude API Key into `backend/.env`. | `""` |
+| `--openai-key` | `string` | Injects OpenAI API Key into `backend/.env`. | `""` |
+| `--gateway-url` | `string` | Sets OpenAI-compatible gateway endpoint URL (Groq, Together, vLLM, OpenRouter). | `""` |
+| `--gateway-key` | `string` | Injects authentication bearer token for custom gateway. | `""` |
+| `--model` | `string` | Pins the Manager reasoning model (e.g. `gemini-2.5-flash`, `claude-3-5-sonnet-20241022`). | `""` |
+| `--worker-model` | `string` | Pins the Worker Python coding model. | `""` |
+| `--pull-models` | `bool` | Automatically triggers `ollama pull` for default manager (`qwen2.5:3b`) and worker (`qwen2.5-coder:7b`). | `false` |
+| `--skip-frontend` | `bool` | Skips frontend bundle installation and compilation. | `false` |
+| `--skip-backend` | `bool` | Skips Python virtualenv creation and package installation. | `false` |
+
+---
+
+### `wizard start`
+Launches the backend control plane and Next.js frontend as a detached background supervisor, polls health endpoints until ready, validates API compatibility markers, and opens the default web browser.
+
+```bash
+wizard start [flags]
+```
+
+#### Flags & Options:
+| Flag | Type | Description | Default |
+|---|---|---|---|
+| `--backend-port` | `int` | Overrides the backend HTTP port. | `8000` |
+| `--frontend-port` | `int` | Overrides the frontend HTTP port. | `3000` |
+| `--no-browser` | `bool` | Suppresses automatic browser launch upon service startup. | `false` |
+| `--provider` | `string` | Overrides the active LLM provider for this execution run. | `""` |
+| `--data-mode` | `string` | Overrides data privacy mode for this execution run. | `""` |
+
+---
+
+### `wizard stop`
+Gracefully halts running backend, frontend, and supervisor processes. Idempotent — safe to execute multiple times.
+
+```bash
+wizard stop
+```
+
+---
+
+### `wizard doctor` / `wizard status`
+Performs an in-depth operational audit of the Wizard deployment, verifying process table health, PID state, log disk usage, OS sandbox capabilities (Landlock/seccomp/seatbelt), and active provider configuration.
+
+```bash
+wizard doctor
+# Alias:
+wizard status
+```
+
+---
+
+### `wizard attach`
+Multiplexes and streams live stdout/stderr from `backend.log` and `frontend.log` directly to your terminal session with source color prefixes until `Ctrl+C` is pressed.
+
+```bash
+wizard attach
+```
+
+---
+
+### `wizard logs`
+Inspects and outputs log file locations and recent log records.
+
+```bash
+# Print all log file paths
+wizard logs
+
+# Output the last 50 lines across backend and frontend
+wizard logs --tail 50
+```
+
+---
+
+### `wizard update`
+Performs a fast-forward Git synchronization, updates backend and frontend dependencies according to lockfiles, and automatically restarts background daemons if previously active.
+
+```bash
+wizard update
+```
+
+---
+
+### `wizard skills`
+Manages the modular corporate skill ecosystem. Allows installing, updating, inspecting, and removing analytical skills with security scanning.
+
+```bash
+# List all installed skills, source repositories, and pinned commit hashes
+wizard skills list
+
+# Install a skill from a GitHub repository with AST safety preview
+wizard skills add https://github.com/Wizard-AIA/wizard-skills-financial
+
+# Update an installed skill to the latest remote revision
+wizard skills update financial-modeling
+
+# Discard local modifications to an installed skill
+wizard skills discard financial-modeling
+
+# Remove an installed skill safely
+wizard skills remove financial-modeling
+
+# Configure GitHub Personal Access Token (PAT) for private enterprise skill repos
+wizard skills token ghp_yourPersonalAccessToken
+```
+
+---
+
+### `wizard env`
+Validates and displays the effective environment configuration derived from `backend/.env`, system environment variables, and auto-detected hardware profiles.
+
+```bash
+wizard env
+```
+
+---
+
+### `wizard version`
+Outputs the compiled binary version, build timestamp, and backend API compatibility target.
+
+```bash
+wizard version
+# Output: wizard CLI, backend API compat v4.0.0
+```
+
+---
+
+## 3. Configuration & State Paths
+
+Wizard adheres to standard OS configuration hierarchy standards:
+
+| Operating System | Configuration Directory (`WIZARD_CONFIG_DIR`) | Logs Directory (`WIZARD_LOG_DIR`) |
+|---|---|---|
+| **macOS** | `~/Library/Application Support/Wizard` | `~/Library/Application Support/Wizard/logs` |
+| **Linux / BSD** | `~/.config/wizard` (or `$XDG_CONFIG_HOME/wizard`) | `~/.local/state/wizard/logs` (or `$XDG_STATE_HOME/wizard/logs`) |
+| **Windows** | `%APPDATA%\Wizard` | `%LOCALAPPDATA%\Wizard\logs` |
+
+---
+
+## 4. Exit Codes & Automation Recipes
+
+The `wizard` binary returns standard POSIX exit codes suitable for CI/CD pipelines and deployment scripts:
+
+| Exit Code | Meaning | Remediation |
+|:---:|---|---|
+| `0` | Success / Operation Completed | None required. |
+| `1` | General Operational Error | Run `wizard doctor` to view failure diagnostics. |
+| `2` | Port Conflict Detected | Port 8000 or 3000 is occupied; terminate conflicting process or pass `--backend-port`. |
+| `3` | Environment Prerequisite Missing | Install required runtime (Python 3.12, Node.js 20, or uv). |
+

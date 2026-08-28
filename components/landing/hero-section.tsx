@@ -61,7 +61,6 @@ function BlurWord({ word, trigger }: { word: string; trigger: number }) {
       framesRef.current.forEach(cancelAnimationFrame);
       timersRef.current.forEach(clearTimeout);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [trigger]);
 
   // gradient colours cycling across letter positions
@@ -205,23 +204,58 @@ export function HeroSection() {
             An agent that runs sandboxed Python, inspects results, self-corrects tracebacks, and verifies its own findings — locally on your machine.
           </p>
 
-          {/* Install command */}
-          <div
-            className={`w-full max-w-[620px] transition-all duration-700 delay-300 ${
-              isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-            }`}
-          >
-            <div className="flex flex-col items-start gap-3">
-              <HeroTerminal command="brew tap Wizard-AIA/wizard && brew install wizard" />
-              <Link
-                href="/download"
-                className="group inline-flex items-center gap-1.5 text-xs sm:text-sm text-white/50 hover:text-white transition-colors pl-1"
-              >
-                Other platforms &amp; Docker
-                <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
-              </Link>
+            {/* Install command */}
+            <div
+              className={`w-full max-w-[620px] transition-all duration-700 delay-300 ${
+                isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+              }`}
+            >
+              <div className="flex flex-col items-start gap-3.5">
+                <HeroTerminal
+                  label="install"
+                  tabs={[
+                    {
+                      id: "brew",
+                      label: "Homebrew",
+                      command: "brew tap Wizard-AIA/wizard && brew install wizard",
+                    },
+                    {
+                      id: "binary",
+                      label: "Release Zip",
+                      command: "curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-darwin-arm64.zip",
+                    },
+                    {
+                      id: "docker",
+                      label: "Docker",
+                      command: "git clone https://github.com/Wizard-AIA/Wizard-w2.git && cd Wizard-w2 && docker compose up -d",
+                    },
+                  ]}
+                />
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs sm:text-sm text-white/50 pl-1">
+                  <Link
+                    href="/download"
+                    className="group inline-flex items-center gap-1.5 hover:text-white transition-colors"
+                  >
+                    All binaries (Linux/Win/macOS)
+                    <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <span className="text-white/20">•</span>
+                  <Link
+                    href="/cli"
+                    className="hover:text-white transition-colors"
+                  >
+                    CLI Reference
+                  </Link>
+                  <span className="text-white/20">•</span>
+                  <Link
+                    href="/docs/getting-started/quickstart"
+                    className="hover:text-white transition-colors"
+                  >
+                    2-Min Quickstart
+                  </Link>
+                </div>
+              </div>
             </div>
-          </div>
         </div>
       </div>
     </section>

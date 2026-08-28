@@ -1,118 +1,200 @@
-# Installation
+# Enterprise Installation Guide
 
-Wizard is designed to run entirely locally on your machine. You can install and run Wizard through pre-built standalone binaries, containerized via Docker Compose, or built directly from source.
+Wizard is engineered to deploy seamlessly across personal developer workstations, secure air-gapped corporate environments, and containerized cloud clusters.
 
-## Option 1: Homebrew (macOS & Linux)
+---
 
-The easiest way to install Wizard:
+## 1. Prerequisites Matrix
+
+Before installing Wizard, verify your system matches the runtime requirements for your chosen deployment topology:
+
+| Requirement | Minimum | Recommended | Notes |
+|---|---|---|---|
+| **Operating System** | macOS 12+ (Apple Silicon / Intel), Linux (Ubuntu 20.04+, Debian 11+, RHEL 8+, Alpine 3.18+), Windows 10/11 (x64) | macOS Sonoma (M2/M3/M4) or Linux x86_64 | Native OS sandboxing is enforced on macOS (`sandbox-exec`) and Linux (`landlock`/`seccomp`). |
+| **Python Runtime** | Python 3.11+ | Python 3.12 with `uv` package manager | Required for Host Execution Backend. Container mode requires no host Python. |
+| **Node.js** | Node.js v20.0.0+ | Node.js v22 LTS with `pnpm` v10+ | Required only when building frontend from source or modifying UI workbenches. |
+| **Hardware Resources** | 4 CPU Cores, 8 GB RAM | 8+ Cores, 16 GB+ Unified Memory | Local LLM inference (`3B`–`7B`) benefits significantly from Apple Silicon Unified Memory or NVIDIA CUDA GPUs. |
+| **Container Engine** *(Optional)* | Docker Engine 24.0+ & Docker Compose v2+ | Docker Engine 27+ with Colima / OrbStack (macOS) | Required only when running `EXECUTION_BACKEND=docker`. |
+
+---
+
+## 2. Installation Channels
+
+Choose the installation channel that best aligns with your infrastructure policies:
+
+### Channel A: Homebrew (macOS & Linux) — *Recommended*
+
+The official Homebrew tap delivers pre-compiled, self-contained releases with global binary symlinking:
 
 ```bash
+# 1. Tap the official Wizard tap repository
 brew tap Wizard-AIA/wizard
+
+# 2. Install the Wizard suite
 brew install wizard
+
+# 3. Verify global CLI installation
+wizard version
+```
+
+Once installed, initialize your local configuration and launch the background supervisor:
+
+```bash
+# Initialize Python virtualenv, install dependencies, and configure backend/.env
 wizard init
+
+# Launch backend + frontend daemons and launch your browser
 wizard start
 ```
 
 ---
 
-## Option 2: Pre-built Binary Packages
+### Channel B: Standalone Release Packages (Zero-Compiler Deployment)
 
-No compiler, Go toolchain, or git clone required. Grab the zip for your
-platform — macOS (Apple Silicon or Intel), Linux (x86_64 or arm64), or
-Windows (x86_64) — from the [download page](/download), which always lists
-the current release.
+Standalone release packages bundle the pre-compiled `wizard` Go binary, backend application code, and optimized production Next.js frontend builds without requiring Git or Go compilers.
 
-### Quick Start with CLI
-
-1. Extract the downloaded zip file into any folder.
-2. In your terminal, initialize and start the service:
+1. Download the verified package for your operating system from the [Download Hub](/download):
 
 ```bash
-./cli/wizard init       # Checks Python 3.12+/Node 20+ and installs dependencies
-./cli/wizard start      # Launches backend + frontend daemon and opens your browser
+# macOS (Apple Silicon ARM64)
+curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-darwin-arm64.zip
+
+# macOS (Intel x86_64)
+curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-darwin-amd64.zip
+
+# Linux (x86_64)
+curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-linux-amd64.zip
+
+# Linux (ARM64)
+curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-linux-arm64.zip
+
+# Windows (x86_64)
+curl -sSL -O https://github.com/Wizard-AIA/Wizard-w2/releases/latest/download/Wizard-windows-amd64.zip
+```
+
+2. Extract and initialize the service:
+
+```bash
+unzip Wizard-darwin-arm64.zip
+cd Wizard-v4.0.0-darwin-arm64
+
+./cli/wizard init
+./cli/wizard start
 ```
 
 3. Open **http://localhost:3000** in your browser.
 
 ---
 
-## Option 2: Running with Docker Compose
+### Channel C: Production Containerization (Docker Compose)
 
-If you prefer full containerization:
+For fully containerized, air-gapped deployments where Python and Node run inside isolated microservices:
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Wizard-AIA/Wizard-w2.git
 cd Wizard-w2
+
+# 2. Launch container stack in detached mode
 docker compose up --build -d
 ```
 
-Open **http://localhost:3000**. API documentation is available at **http://localhost:8000/docs**.
+The containerized stack exposes:
+- **Web UI & Analytics Workbenches**: `http://localhost:3000`
+- **FastAPI Control Plane & REST API**: `http://localhost:8000`
+- **Interactive OpenAPI Specification**: `http://localhost:8000/docs`
 
-### Sandbox Tier Sizing
-
-The sandbox container image ships in three toolkit tiers:
+#### Sandbox Image Tier Allocation
+Wizard provides three pre-configured sandbox container tiers tailored to analytical compute footprints:
 
 ```bash
-SANDBOX_TIER=core docker compose up --build -d   # pandas, numpy, pyarrow, duckdb, polars, matplotlib, openpyxl (default)
-SANDBOX_TIER=standard docker compose up --build -d   # adds scikit-learn, statsmodels, scipy, seaborn
-SANDBOX_TIER=full docker compose up --build -d   # adds survival analysis (lifelines) and geospatial (geopandas)
+# Core: Lightweight data manipulation (pandas, numpy, pyarrow, duckdb, polars, openpyxl)
+SANDBOX_TIER=core docker compose up --build -d
+
+# Standard (Default): Advanced statistics & machine learning (scikit-learn, scipy, statsmodels, seaborn)
+SANDBOX_TIER=standard docker compose up --build -d
+
+# Full: Specialized geospatial & survival analytics (lifelines, geopandas, shapely)
+SANDBOX_TIER=full docker compose up --build -d
 ```
 
 ---
 
-## ️ Option 3: Building from Source
+### Channel D: Building from Source
 
-To run directly from source without the prebuilt binary:
+For contributors and enterprise teams maintaining internal forks:
 
 ```bash
+# 1. Clone the repository
 git clone https://github.com/Wizard-AIA/Wizard-w2.git
 cd Wizard-w2
 
-# Build the CLI binary
-cd cli && go build -o wizard ./cmd/wizard && cd ..
+# 2. Build the Go CLI supervisor
+cd cli
+go build -ldflags "-s -w -X wizard/internal/compat.BuildCompatVersion=v4.0.0" -o wizard ./cmd/wizard
+cd ..
 
-# Initialize and start
+# 3. Initialize dependencies and build frontend
 ./cli/wizard init
+
+# 4. Start the supervised cluster
 ./cli/wizard start
 ```
 
-Or run services manually:
+---
+
+## 3. Post-Installation Verification (`wizard doctor`)
+
+Run `wizard doctor` to perform comprehensive environment diagnostics across process supervisors, network ports, and OS sandbox boundaries:
 
 ```bash
-# Terminal 1: Backend
-uv pip install -r requirements.txt -r requirements-local.txt
-cd backend && uvicorn src.api.api:app --port 8000
+wizard doctor
+```
 
-# Terminal 2: Frontend
-cd frontend && pnpm install && pnpm dev
+**Sample Diagnostic Output:**
+
+```
+wizard status
+==============
+daemon:            healthy (supervisor pid=41208, uptime=14m22s)
+backend (8000):    running (pid=41209, healthy)
+frontend (3000):   running (pid=41210, healthy)
+
+config dir:        /Users/admin/Library/Application Support/Wizard
+logs dir:          /Users/admin/Library/Application Support/Wizard/logs
+  backend.log:     42.1 KB
+  frontend.log:    18.4 KB
+  daemon.log:      3.2 KB
+
+API_PROVIDER:      gemini
+DATA_MODE:         cloud-only
+EXECUTION_BACKEND: host (enforced: +filesystem,network,processes -memory)
+SANDBOX_CAPABILITY: OS seatbelt active, Landlock ready
 ```
 
 ---
 
-## Model Setup
+## 4. Enterprise Air-Gap & Platform Guidelines
 
-You do **not** need to install a model before starting. Once the app is running:
-1. Navigate to **/models** in the web interface.
-2. Click **Install a model** to download starter models directly within the UI.
-
-If you prefer pulling models via terminal:
-
-```bash
-# Recommended models
-ollama pull qwen2.5:3b           # Reasoning Manager model
-ollama pull qwen2.5-coder:7b     # Python Worker model
-ollama pull embeddinggemma       # Semantic RAG embeddings (optional)
-```
-
----
-
-## ️ Platform Notes
-
-### macOS Host Mode & OpenMP
-If you run `EXECUTION_BACKEND=host` on macOS and use machine learning packages (`xgboost`, `lightgbm`), install the OpenMP runtime library:
+### macOS OpenMP Dynamic Linking
+If running in host execution mode (`EXECUTION_BACKEND=host`) on macOS and training tree-based models (`xgboost`, `lightgbm`), install Apple's OpenMP library:
 
 ```bash
 brew install libomp
 ```
 
-This is an upstream requirement of compiled OpenMP wheels on macOS.
+### Linux Seccomp & Landlock Sandboxing
+Linux host sandboxing requires unprivileged user namespaces and a kernel with Landlock enabled (Linux 5.13+). To ensure non-root execution boundaries:
+
+```bash
+# Verify Landlock support
+cat /sys/kernel/security/lsm | grep -o landlock || echo "Landlock inactive, falling back to process isolation"
+```
+
+### Complete Offline / Air-Gapped Setup
+For classified or strict zero-egress networks:
+1. Download wheel caches using `uv pip download -r requirements.txt -r requirements-local.txt -d /opt/wizard-wheels`.
+2. Configure `DATA_MODE=local-only` in `backend/.env`.
+3. Pre-load local GGUF models into Ollama or LM Studio (`ollama pull qwen2.5:3b && ollama pull qwen2.5-coder:7b`).
+4. Wizard will enforce a strict zero-outbound network policy across all agent nodes and tools.
+

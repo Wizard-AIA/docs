@@ -43,7 +43,6 @@ function generateAsciiPattern() {
 export function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [direction, setDirection] = useState<"left" | "right">("right");
   const [asciiPattern, setAsciiPattern] = useState("");
   const sectionRef = useRef<HTMLElement>(null);
 
@@ -67,24 +66,20 @@ export function TestimonialsSection() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setDirection("right");
       setActiveIndex((prev) => (prev + 1) % testimonials.length);
     }, 8000);
     return () => clearInterval(interval);
   }, []);
 
   const goTo = (index: number) => {
-    setDirection(index > activeIndex ? "right" : "left");
     setActiveIndex(index);
   };
 
   const goPrev = () => {
-    setDirection("left");
     setActiveIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
   };
 
   const goNext = () => {
-    setDirection("right");
     setActiveIndex((prev) => (prev + 1) % testimonials.length);
   };
 

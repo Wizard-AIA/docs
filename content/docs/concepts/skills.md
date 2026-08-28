@@ -1,86 +1,94 @@
-# Skills
+# Skills Engine & Domain Playbooks Specification
 
-A skill is reusable analytical know-how the agent can **cite**. Everything
-else Wizard remembers — the semantic cache, working memory, past
-trajectories — is private and opaque: it changes what the agent does, but
-nothing anyone can read, edit, or point to. A skill is different: it's a
-`SKILL.md` file, frontmatter plus instructions, that shows up in the UI as a
-named thing informing a specific decision.
+The Wizard Skills Engine provides a declarative, auditable mechanism to equip the autonomous agent with specialized enterprise analytical playbooks, statistical routines, and corporate data definitions without modifying the core codebase.
 
-## Three layers
+---
 
-Skills resolve from three places, ascending precedence:
+## 1. Skill Architecture & The Declarative Specification
 
-1. **Built-in** — ships with Wizard, read-only. An edit here would be lost
-   on the next update.
-2. **User** — lives beside your other Wizard config (`credentials.json`,
-   `connections.json`), applies across every project.
-3. **Project** — lives in `.wizard/skills` under your current working
-   directory, applies to that project only.
+A Wizard Skill is defined purely in Markdown (`SKILL.md`) with structured YAML frontmatter. Unlike raw Python scripts that execute unchecked, skills provide structured guidance that the Planner model integrates into reasoned plans:
 
-A name defined at more than one layer resolves to the more specific one —
-but the shadowed copy is still listed, so editing a built-in skill that's
-shadowed by a project-level one of the same name doesn't silently appear to
-do nothing.
+```markdown
+---
+name: "financial-dcf-valuation"
+description: "Discounted Cash Flow (DCF) modeling, WACC calculation, and sensitivity tables."
+tags: ["finance", "valuation", "dcf", "wacc"]
+version: "1.2.0"
+author: "Corporate Analytics Team"
+---
 
-## Skills carry no executable code
+# Financial DCF Modeling Guidelines
 
-This is a hard trust boundary, not a convention. A skill directory
-containing a `.py`, `.sh`, `.ps1`, `.bat`, `.exe`, `.dll`, `.so`, or similar
-file is **refused outright**, naming the offending file — refused rather
-than silently ignored, so the author finds out at load time instead of
-discovering later that half their skill never actually ran. Any Python shown
-inside a skill's instructions is illustrative text; the only way anything
-derived from it executes is the worker model writing fresh code that then
-passes the same static guard and sandbox as anything else.
+## Analytical Methodology
+1. **Free Cash Flow to Firm (FCFF)**: Compute `EBIT * (1 - Tax Rate) + D&A - CapEx - Delta NWC`.
+2. **Terminal Value**: Apply both Gordon Growth (`g = 2.5%`) and Exit Multiple (`EV/EBITDA`) approaches.
+3. **Sensitivity Matrix**: Generate a 2D table varying WACC (+/- 100bps) against Terminal Growth Rates.
 
-This matters most once skills become installable from someone else's GitHub
-repository (below) — a skill is untrusted text that goes into the manager's
-prompt, and if a skill could carry code, a malicious one could try to make
-itself self-propagating.
+## Required Plotting Standards
+- Render valuation waterfall charts using Plotly interactive bars.
+- Enforce thousand-separator formatting (`$#,##0`) on all financial tables.
+```
 
-## How a skill gets used
+---
 
-Retrieval happens in the planning prompt and through the `consult` action —
-never in the worker's per-iteration prompt, which is rebuilt on every
-iteration and every correction retry, so anything riding along there gets
-paid for repeatedly. Matching is a local ranking over installed skills, not
-a model call — a compact analysis is still just three round-trips with
-skills installed.
+## 2. Hard Security Boundary: No Unchecked Executables
 
-When a skill informs a plan, that's emitted as a distinct signal in the
-event stream, and recorded so `/skills` can show which analyses used which
-skill — recorded whether or not the analysis that followed succeeded,
-because a skill that's reached for and keeps failing is exactly the one
-worth finding.
+Enterprise security mandates that external skills cannot introduce arbitrary code execution vectors:
 
-## Promotion — Wizard can offer to save one
+```
+                          ┌──────────────────────────┐
+                          │    wizard skills add     │
+                          │   (Remote GitHub URL)    │
+                          └────────────┬─────────────┘
+                                       │
+                                       ▼
+                          ┌──────────────────────────┐
+                          │  Static Security Scanner │
+                          │  - Inspects file types   │
+                          │  - Scans AST syntax      │
+                          └────────────┬─────────────┘
+                                       │
+                 ┌─────────────────────┴─────────────────────┐
+                 │                                           │
+                 ▼                                           ▼
+      [Any .py, .sh, .exe, .so]                  [Pure SKILL.md Markdown]
+                 │                                           │
+                 ▼                                           ▼
+         ❌ REFUSED OUTRIGHT                         ✅ STAGED FOR REVIEW
+   "Skills cannot contain binaries"               Pin commit hash & Prompt User
+```
 
-If you ask a structurally similar question enough times, Wizard may offer to
-save it as a reusable skill. Two different signals are tracked separately: a
-**recurring** question you keep asking (the strongest evidence something
-should become a skill), and a **recovery** pattern — a failure that got
-fixed, and then recurred (a trap worth documenting, not a routine). The
-offer appears once, at the threshold — not every time after, which would
-turn a useful prompt into one you learn to dismiss.
+1. **Strict Filetype Allowlist**: Any skill directory containing executable binaries or raw scripts (`.py`, `.sh`, `.ps1`, `.exe`, `.so`, `.dll`) is **immediately rejected** at import time.
+2. **Execution via Worker Isolation**: Python snippets in a skill are treated as illustrative reference text. When generating analysis code, the Worker model authors fresh code that is independently scanned by CodeGuard and executed within the sandboxed runtime.
 
-**A draft is never written by asking a model to write it.** If a candidate
-question has a recorded plan and code that actually ran, the draft is built
-from that. If it doesn't, the draft is built from the question alone — there
-being nothing else true to say about it yet. Nothing here fabricates a
-skill's content; it's the same "report, don't invent" rule the
-[trust layer](architecture.md) applies to answers, applied to skill
-authorship.
+---
 
-You can also save any answer as a skill directly from the results view,
-without waiting for the threshold — "save *this* one" is a different, more
-immediate action than the recurring-question offer.
+## 3. Three-Tier Scope Hierarchy
 
-## Installing a skill from someone else's repository
+Skills resolve hierarchically with deterministic precedence:
 
-See [Installing a Skill from GitHub](../guides/installing-a-skill.md) for
-the walkthrough. The short version: **parse → resolve to a commit → stage →
-you read it → you approve.** Nothing reaches the agent between staging and
-your explicit approval, and installing is always something *you* do — never
-an action the agent can take on its own, since a fetched skill that could
-also fetch more skills would be wormable.
+| Tier | File Location | Scope | Precedence |
+|---|---|---|:---:|
+| **Project Tier** | `.wizard/skills/<skill-name>/` | Current project/workspace directory only. | **1 (Highest)** |
+| **User Tier** | `~/Library/Application Support/Wizard/skills/` | Across all sessions on this workstation. | **2** |
+| **Built-In Tier** | `<wizard-install>/skills/` | Pre-bundled system analytical playbooks. | **3 (Base)** |
+
+If a project-level skill shares a name with a built-in skill, the project version cleanly overrides the system default while surfacing a shadow notice in `wizard skills list`.
+
+---
+
+## 4. Discovery & Semantic Retrieval
+
+During the **Observe & Plan** stage, Wizard's control plane queries the Skill Catalog:
+1. **Lexical & Embedding Retrieval**: Matches user query intent against skill descriptions, tags, and semantic bodies.
+2. **Zero-Latency Ingestion**: Candidate skill instructions are injected solely into the Manager's planning context, ensuring worker coding loops are not burdened with redundant context.
+3. **Explicit Provenance Attribution**: When a skill shapes an analysis plan, the event stream logs an `AppliedSkillEvent`, surfacing the exact skill name, version, and cited methodology in the final response.
+
+---
+
+## 5. Skill Promotion & Recurring Pattern Capture
+
+Wizard autonomously detects recurring analytical workflows:
+- **Recurring Question Detection**: When similar inquiries are formulated across multiple sessions, Wizard offers to consolidate the successful execution trajectory into a new draft skill.
+- **Recovery Pattern Synthesis**: If a complex data anomaly (e.g. unconventional date formats in legacy ERP dumps) was successfully diagnosed and resolved through self-healing, Wizard can save the self-correction recipe as a project skill.
+- **One-Click Promotion**: Users can click **Save as Skill** directly from the UI canvas on any completed analysis turn.
