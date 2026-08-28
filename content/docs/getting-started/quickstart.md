@@ -58,7 +58,7 @@ Select your desired analytical depth from the composer toolbar:
 
 As the agent deliberates, the live UI streams each discrete step in real time:
 
-```
+```log
 [PLAN]      Manager forms 3-stage hypothesis on contract discounts vs churn.
 [CODE]      Worker writes vectorized pandas & scikit-learn logistic regression.
 [GUARD]     CodeGuard AST scan: 0 policy violations detected (safe).

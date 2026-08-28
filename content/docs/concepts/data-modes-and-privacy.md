@@ -37,7 +37,7 @@ If a user switches a live session to `local-only`, any active cloud model assign
 
 When operating in `hybrid` mode where a cloud model serves as the **Manager** (planner) and a local model operates as the **Worker** (coder), Wizard activates the **Prompt Redaction Engine**:
 
-```
+```diagram
 Raw Ingested Dataset (e.g. payroll.csv)
 ├── Employee Name: "Jane Doe" ───────────────► REDACTED (Withheld)
 ├── Base Salary: $185,000 ──────────────────► REDACTED (Withheld)

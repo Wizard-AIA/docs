@@ -8,7 +8,7 @@ Running AI-generated code against proprietary enterprise data requires absolute 
 
 Every line of Python code authored by Wizard passes through two independent security boundaries before reaching a CPU:
 
-```
+```diagram
 ┌──────────────────────────────────────────────────────────────┐
 │  Layer 1: CodeGuard AST Static Analyzer (Pre-Execution)      │
 │  - Parses Python AST to block 31 modules, 11 builtins, & dunders│

@@ -8,7 +8,7 @@ The `wizard` command-line utility is a compiled, zero-dependency Go binary engin
 
 Instead of requiring manual multi-terminal script invocations (`uvicorn` + `next dev`), `wizard` operates an idempotent, detached supervisor daemon:
 
-```
+```diagram
                   ┌─────────────────────────────────────┐
                   │          wizard CLI Binary          │
                   │   (CLI entrypoint & CLI manager)    │

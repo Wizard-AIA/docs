@@ -153,7 +153,7 @@ wizard doctor
 
 **Sample Diagnostic Output:**
 
-```
+```log
 wizard status
 ==============
 daemon:            healthy (supervisor pid=41208, uptime=14m22s)

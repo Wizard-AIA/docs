@@ -35,7 +35,7 @@ author: "Corporate Analytics Team"
 
 Enterprise security mandates that external skills cannot introduce arbitrary code execution vectors:
 
-```
+```diagram
                           ┌──────────────────────────┐
                           │    wizard skills add     │
                           │   (Remote GitHub URL)    │

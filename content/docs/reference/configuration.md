@@ -8,7 +8,7 @@ Wizard derives its runtime behavior from environment variables, `backend/.env`, 
 
 Settings resolve with deterministic precedence (highest to lowest):
 
-```
+```diagram
 ┌────────────────────────────────────────────────────────┐
 │ 1. Process Environment Variables (export KEY=value)    │  (Highest)
 ├────────────────────────────────────────────────────────┤

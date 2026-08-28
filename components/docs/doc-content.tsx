@@ -109,10 +109,11 @@ export function DocContent({ markdown }: { markdown: string }) {
           ),
           pre: ({ children }) => <>{children}</>,
           code: ({ className, children }) => {
-            const match = /language-(\w+)/.exec(className ?? "")
             const raw = String(children).replace(/\n$/, "")
+            const match = /language-(\w+)/.exec(className ?? "")
+            const isBlock = Boolean(match) || raw.includes("\n") || /[┌─│└┘▼▲├┤┼►]/.test(raw) || /├──|└──/.test(raw)
 
-            if (!match) {
+            if (!isBlock) {
               return (
                 <code className="rounded-md border border-white/10 bg-white/[0.07] px-1.5 py-0.5 font-mono text-[0.875em] text-[#eca8d6] font-normal">
                   {children}
@@ -120,7 +121,7 @@ export function DocContent({ markdown }: { markdown: string }) {
               )
             }
 
-            const language = match[1] || "text"
+            const language = match ? match[1] : /[┌─│└┘▼▲├┤┼►]/.test(raw) || /├──|└──/.test(raw) ? "diagram" : "text"
             return <DocCodeBlock code={raw} language={language} />
           },
         }}
