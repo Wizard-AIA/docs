@@ -13,6 +13,35 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v1.0.3",
+    tag: "v1.0.3",
+    kind: "feature",
+    title: "Universal Cross-Platform Installers, Blueprint Diagrams & Documentation Suite",
+    date: "2026-08-28",
+    highlights: [
+      {
+        title: "Universal 1-command installer suite",
+        body: "Shipped automated single-command installers for Linux (curl -fsSL https://wizardw2.vercel.app/install.sh | bash) and Windows PowerShell (irm https://wizardw2.vercel.app/install.ps1 | iex), alongside the official Homebrew tap and Scoop package manifest.",
+      },
+      {
+        title: "Fixed 3-column documentation architecture",
+        body: "Redesigned the documentation shell with isolated independent scroll containers (Left Navigation, Middle Reading Content, Right Table of Contents) so sidebars remain fixed in place while navigating articles.",
+      },
+      {
+        title: "Blueprint architecture diagram canvas",
+        body: "Implemented a dedicated blueprint rendering canvas with non-ligature monospace font grid and verified specification badges for all architecture and workflow flowcharts.",
+      },
+      {
+        title: "Global CLI symlink path resolution",
+        body: "Enhanced the Go supervisor CLI with symlink traversal to resolve application roots when executed globally from any directory outside the git checkout.",
+      },
+      {
+        title: "CodeGuard AST & sandbox hardening",
+        body: "Expanded static AST security analysis across 31 banned modules, 11 builtins, and 22 dunder access patterns with graceful LLM provider error handling.",
+      },
+    ],
+  },
+  {
     version: "v1.0.2",
     tag: "v1.0.2",
     kind: "docs",
