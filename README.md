@@ -2,6 +2,10 @@
 
 Official landing page and documentation hub for **[Wizard](https://github.com/Wizard-AIA/Wizard-w2)** — the local-first autonomous AI data analysis agent.
 
+<p align="center">
+  <img src="docs/assets/wizard-ui.png" alt="Wizard Website Preview" width="100%" />
+</p>
+
 ## 🚀 Overview
 
 Built with:
