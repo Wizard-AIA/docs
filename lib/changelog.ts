@@ -13,6 +13,27 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v1.0.7",
+    tag: "v1.0.7",
+    kind: "feature",
+    title: "Markdown Data Tables, Gemini Flash Model Prioritization & Self-Healing WebSockets",
+    date: "2026-08-30",
+    highlights: [
+      {
+        title: "Markdown Table Rendering Engine",
+        body: "Fixed table parser boundary detection to render summary statistics, data quality triage matrices, and distribution metrics into interactive, zebra-striped data tables with tabular numeric fonts.",
+      },
+      {
+        title: "Gemini Flash Model Prioritization",
+        body: "Default model suggestions now prioritize high-capacity gemini-2.5-flash and gemini-3.7-flash models for all roles, providing seamless zero-friction analysis on standard Google AI Studio free tier keys.",
+      },
+      {
+        title: "Intelligent LLM Error Sanitization & Self-Healing WebSockets",
+        body: "Replaced raw JSON exception dumps with human-readable guidance and retry timers. WebSocket connections automatically mint fresh sessions on reconnect, eliminating stale token loops.",
+      },
+    ],
+  },
+  {
     version: "v1.0.6",
     tag: "v1.0.6",
     kind: "feature",

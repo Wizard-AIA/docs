@@ -35,17 +35,16 @@ export interface ReleaseInfo {
 // the GitHub API is unreachable or rate-limited, so /download never renders
 // broken links just because that one request failed.
 const FALLBACK_RELEASE: ReleaseInfo = {
-  tag: "v1.0.6",
-  publishedAt: "2026-08-30T10:00:00Z",
-  htmlUrl: `${REPO_URL}/releases/tag/v1.0.6`,
+  tag: "v1.0.7",
+  publishedAt: "2026-08-30T11:00:00Z",
+  htmlUrl: `${REPO_URL}/releases/tag/v1.0.7`,
   live: false,
   assets: [
-    { name: "Wizard-v1.0.6-darwin-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.6/Wizard-v1.0.6-darwin-arm64.zip`, sizeBytes: 6186524 },
-    { name: "Wizard-v1.0.6-darwin-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.6/Wizard-v1.0.6-darwin-amd64.zip`, sizeBytes: 6606028 },
-    { name: "Wizard-v1.0.6-linux-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.6/Wizard-v1.0.6-linux-amd64.zip`, sizeBytes: 6500352 },
-    { name: "Wizard-v1.0.6-linux-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.6/Wizard-v1.0.6-linux-arm64.zip`, sizeBytes: 6081740 },
-    { name: "Wizard-v1.0.6-windows-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.6/Wizard-v1.0.6-windows-amd64.zip`, sizeBytes: 6606028 },
-    { name: "Wizard-w2-sbom.spdx.json", url: `${REPO_URL}/releases/download/v1.0.6/Wizard-w2-sbom.spdx.json`, sizeBytes: 0 },
+    { name: "Wizard-v1.0.7-darwin-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.7/Wizard-v1.0.7-darwin-arm64.zip`, sizeBytes: 6291456 },
+    { name: "Wizard-v1.0.7-darwin-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.7/Wizard-v1.0.7-darwin-amd64.zip`, sizeBytes: 6606028 },
+    { name: "Wizard-v1.0.7-linux-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.7/Wizard-v1.0.7-linux-amd64.zip`, sizeBytes: 6500352 },
+    { name: "Wizard-v1.0.7-linux-arm64.zip", url: `${REPO_URL}/releases/download/v1.0.7/Wizard-v1.0.7-linux-arm64.zip`, sizeBytes: 6081740 },
+    { name: "Wizard-v1.0.7-windows-amd64.zip", url: `${REPO_URL}/releases/download/v1.0.7/Wizard-v1.0.7-windows-amd64.zip`, sizeBytes: 6606028 },
   ],
 };
 
