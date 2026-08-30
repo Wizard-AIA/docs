@@ -5,26 +5,26 @@ import { useEffect, useRef, useState } from "react";
 const features = [
   {
     number: "01",
-    title: "Investigates, then verifies",
-    description: "Rather than following a plan fixed before anything ran, the manager sees what the code actually produced and decides what to do next. The headline result is recomputed by a different route before it reaches you.",
-    stats: { value: "2x", label: "computed, then verified" },
+    title: "Tri-Model Architecture",
+    description: "Dedicated roles for Manager (DAG orchestration & reasoning), Worker (executable Python authoring), and Embeddings (vector context retrieval). Mix and match Local (Ollama), Hybrid, or Cloud models per role.",
+    stats: { value: "3-way", label: "modular role separation" },
   },
   {
     number: "02",
-    title: "Runs the code, not a suggestion",
-    description: "Results come from execution in a sandboxed subprocess or container, not from a model claiming an answer. Docker is optional, not a fallback.",
-    stats: { value: "3", label: "execution backends" },
+    title: "Stateful DAG & Quality Rollbacks",
+    description: "Executes a self-healing directed acyclic graph. Rather than following a fixed sequence, the agent inspects execution output, branches dynamically, and rolls back via a checkpoint stack upon verification mismatch.",
+    stats: { value: "DAG", label: "execution & rollback engine" },
   },
   {
     number: "03",
-    title: "Self-correcting",
-    description: "Failures are fed back with the real traceback, and successful repairs are remembered as negative examples for next time.",
-    stats: { value: "auto", label: "tier selection" },
+    title: "Hybrid Vector Search & Reranking",
+    description: "Combines sqlite-vec vector embeddings, FTS5 BM25 keyword search, Reciprocal Rank Fusion (RRF), and cross-encoder reranking to accurately ground reference documentation without hallucinations.",
+    stats: { value: "RRF", label: "hybrid vector retrieval" },
   },
   {
     number: "04",
-    title: "Local by default",
-    description: "Two small Ollama models are enough to be useful. Nothing is sent anywhere unless you explicitly opt into a cloud provider.",
+    title: "Local by default, Cloud when needed",
+    description: "Runs 100% locally with zero bytes outbound using Ollama or LM Studio. Seamlessly escalates to Gemini, Claude, or OpenAI with automatic schema-only privacy redaction.",
     stats: { value: "0", label: "bytes sent by default" },
   },
 ];

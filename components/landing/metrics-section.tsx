@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 
 const metrics = [
   {
-    value: 1370,
+    value: 1548,
     suffix: "+",
     prefix: "",
     decimals: 0,
@@ -12,8 +12,8 @@ const metrics = [
     sublabel: "unit · integration · regression · negative",
   },
   {
-    value: 33,
-    suffix: "",
+    value: 38,
+    suffix: "+",
     prefix: "",
     decimals: 0,
     label: "CI workflows",
@@ -330,6 +330,10 @@ export function MetricsSection() {
           <span>OpenAI</span>
           <span>Anthropic</span>
           <span>Gemini</span>
+          <span>DuckDB</span>
+          <span>Polars</span>
+          <span>Redis</span>
+          <span>OpenTelemetry</span>
           <span className="text-foreground">Any OpenAI-compatible gateway</span>
         </div>
       </div>

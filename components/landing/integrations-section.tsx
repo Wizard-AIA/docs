@@ -71,9 +71,9 @@ const integrations = [
   { name: "LM Studio", category: "Local" },
   { name: "Custom gateway", category: "OpenAI-compatible" },
   { name: "Docker", category: "Execution" },
-  { name: "DuckDB", category: "SQL" },
+  { name: "DuckDB", category: "SQL Engine" },
   { name: "Polars", category: "DataFrames" },
-  { name: "pandas", category: "DataFrames" },
+  { name: "sqlite-vec", category: "Vector Store" },
   { name: "Plotly", category: "Charts" },
 ];
 

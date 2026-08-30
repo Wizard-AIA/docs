@@ -170,12 +170,20 @@ export function HeroSection() {
         <div className="w-full lg:max-w-[70%]">
           {/* Eyebrow */}
           <div 
-            className={`mb-5 sm:mb-8 transition-all duration-700 ${
+            className={`mb-5 sm:mb-8 flex flex-wrap items-center gap-3 transition-all duration-700 ${
               isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
             }`}
           >
-            <span className="inline-flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-mono text-white/80">
-              <span className="w-5 sm:w-8 h-px bg-[#eca8d6]" />
+            <Link
+              href="/changelog"
+              className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/15 border border-white/20 text-xs font-mono text-[#eca8d6] transition-all hover:scale-105"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-[#eca8d6] animate-pulse" />
+              <span>v1.0.6 Released: Tri-Model Architecture</span>
+              <ArrowRight className="w-3 h-3 ml-0.5" />
+            </Link>
+            <span className="hidden sm:inline text-white/30">•</span>
+            <span className="inline-flex items-center gap-2 text-xs sm:text-sm font-mono text-white/80">
               Local-first autonomous data analysis
             </span>
           </div>
@@ -201,7 +209,7 @@ export function HeroSection() {
           <p className={`text-sm sm:text-base md:text-lg text-white/60 leading-relaxed max-w-xl mb-8 sm:mb-10 transition-all duration-1000 delay-150 ${
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
           }`}>
-            An agent that runs sandboxed Python, inspects results, self-corrects tracebacks, and verifies its own findings — locally on your machine.
+            An autonomous data analysis agent powered by a Tri-Model architecture (Manager, Worker, Embeddings). Runs sandboxed Python, self-corrects tracebacks, and verifies its own findings — locally on your machine.
           </p>
 
             {/* Install command */}
@@ -243,6 +251,13 @@ export function HeroSection() {
                   >
                     All binaries (Linux/Win/macOS)
                     <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
+                  </Link>
+                  <span className="text-white/20">•</span>
+                  <Link
+                    href="/docs/architecture/overview"
+                    className="hover:text-white transition-colors"
+                  >
+                    Tri-Model Specs
                   </Link>
                   <span className="text-white/20">•</span>
                   <Link

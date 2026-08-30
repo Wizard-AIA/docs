@@ -5,19 +5,19 @@ import { useState, useEffect, useRef } from "react";
 const features = [
   {
     title: "Typed event protocol",
-    description: "session · reasoning_delta · code · stdout · final — every WS frame is a fixed shape."
+    description: "session · reasoning_delta · code · stdout · final — every WS & SSE frame is a fixed typed contract."
   },
   {
     title: "Streams as it thinks",
-    description: "Reasoning, code, stdout and the answer arrive as separate delta streams, token by token."
+    description: "Reasoning, code, stdout and the verified answer arrive as separate delta streams, token by token."
   },
   {
-    title: "Six providers, one interface",
-    description: "Ollama, LM Studio, Anthropic, OpenAI, Gemini, or any OpenAI-compatible gateway."
+    title: "OpenTelemetry & Prometheus",
+    description: "Built-in distributed tracing, TTFT latency tracking, and live /metrics endpoint ready for enterprise observability."
   },
   {
     title: "OpenAPI, generated",
-    description: "Interactive docs at /docs; TypeScript types generated straight from the schema."
+    description: "Interactive Swagger docs at /docs; TypeScript contracts generated straight from the schema with zero drift."
   },
 ];
 

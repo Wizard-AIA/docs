@@ -44,10 +44,7 @@ export default function AboutPage() {
             Built in the open.
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Wizard is a local-first, autonomous data analysis agent — a manager model that plans and a worker
-            model that writes code, investigating a real dataset in a sandboxed process until it has an answer
-            it can independently verify. It's built as an open project: the code, the reasoning behind it, and
-            the way it's governed are all public.
+            Wizard is a local-first, autonomous data analysis agent powered by a Tri-Model architecture — a manager model that plans, a worker model that writes code, and dedicated vector embeddings that retrieve context, investigating a real dataset in a sandboxed process until it has an answer it can independently verify. It's built as an open project: the code, the reasoning behind it, and the way it's governed are all public.
           </p>
         </Reveal>
 
