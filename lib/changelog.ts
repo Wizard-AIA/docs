@@ -13,6 +13,27 @@ export interface Release {
 
 export const RELEASES: Release[] = [
   {
+    version: "v1.0.6",
+    tag: "v1.0.6",
+    kind: "feature",
+    title: "Tri-Model System (Manager, Worker, Embeddings), Hybrid Search & Enterprise SRE Hardening",
+    date: "2026-08-30",
+    highlights: [
+      {
+        title: "Tri-Model Architecture & User Embedding Choices",
+        body: "Elevated Embeddings into a first-class model pillar alongside Manager and Worker. Users can configure embedding models across Local (Ollama/LM Studio), Hybrid (schema-redacted), and Cloud (OpenAI/Gemini/Gateway) topologies, with automatic zero-disk deterministic Blake2b hashing fallback and dedicated CLI flags (--embedding-provider, --embedding-model).",
+      },
+      {
+        title: "Dynamic Hybrid Vector & BM25 Search Engine",
+        body: "Integrated sqlite-vec KNN cosine embeddings with FTS5 BM25 keyword search using Reciprocal Rank Fusion (RRF), batched chunk vectorization, FlashRank Cross-Encoder reranking, and single-flight cache stampede protection.",
+      },
+      {
+        title: "Enterprise SRE Health & Resumable DAG Architecture",
+        body: "Added Kubernetes-ready /health/live and /health/ready probes, W3C OpenTelemetry distributed tracing, Prometheus metrics (/metrics with TTFT and p50/p90/p95/p99 latency quantiles), Redis Pub/Sub session bus, Server-Sent Events (SSE) streaming fallback, and a stateful resumable DAG agent architecture.",
+      },
+    ],
+  },
+  {
     version: "v1.0.5",
     tag: "v1.0.5",
     kind: "feature",

@@ -22,14 +22,19 @@ Settings resolve with deterministic precedence (highest to lowest):
 
 ---
 
-## 2. LLM Inference & Provider Configuration
+## 2. Tri-Model Architecture Configuration
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
 | `API_PROVIDER` | `string` | `ollama` | Default inference provider: `ollama`, `lmstudio`, `gemini`, `anthropic`, `openai`, or `custom_gateway`. |
 | `DATA_MODE` | `string` | `local-only` | Session privacy mode: `local-only` (100% air-gapped), `hybrid` (redacted), or `cloud-only`. |
-| `MODEL_NAME` | `string` | `""` | Pins the Manager reasoning model (e.g. `gemini-2.5-flash`, `qwen2.5:3b`). Empty = use provider default. |
-| `WORKER_MODEL_NAME` | `string` | `""` | Pins the Worker coding model (e.g. `gemini-2.5-flash`, `qwen2.5-coder:7b`). |
+| `MODEL_NAME` | `string` | `""` | Pins the Manager reasoning model (e.g. `qwen3:8b`, `gemini-2.5-flash`). Empty = auto-select. |
+| `WORKER_MODEL_NAME` | `string` | `""` | Pins the Worker coding model (e.g. `qwen2.5-coder:7b`). |
+| `EMBEDDING_PROVIDER` | `string` | `""` | Pins vector embedding provider: `ollama`, `lmstudio`, `openai`, `gemini`, `custom_gateway`, `none`. Empty follows `API_PROVIDER`. |
+| `EMBEDDING_REMOTE_MODEL` | `string` | `""` | Pins remote embedding model id (e.g. `nomic-embed-text`, `text-embedding-3-small`). Empty = auto-discover. |
+| `EMBEDDINGS_REMOTE_ENABLED`| `bool` | `true` | When true, attempts provider or local sentence-transformers before falling back to Blake2b. |
+| `EMBEDDINGS_FORCE_FALLBACK`| `bool` | `false` | When true, forces deterministic 384-dimensional Blake2b lexical hashing encoder. |
+| `RAG_ENABLED` | `bool` | `false` | Enables semantic document retrieval across uploaded PDF/DOCX attachments. |
 | `VISION_MODEL_NAME` | `string` | `""` | Model used for visual chart inspection and aesthetic critique (e.g. `llama3.2-vision`). |
 | `TEMPERATURE` | `float` | `0.0` | Sampling temperature for analytical determinism. |
 | `MAX_TOKENS` | `int` | `4096` | Upper token generation limit per completion turn. |
@@ -69,7 +74,7 @@ Settings resolve with deterministic precedence (highest to lowest):
 
 ---
 
-## 5. Agentic Loop & Orchestration Parameters
+## 5. Agentic Loop, DAG & Grounding Parameters
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
@@ -77,21 +82,26 @@ Settings resolve with deterministic precedence (highest to lowest):
 | `AGENT_MAX_ITERATIONS`| `int` | `24` | Hard ceiling for agent turn iterations to prevent runaway gateway billing. |
 | `AGENT_REQUIRE_APPROVAL`| `bool` | `false` | When true, pauses execution after the planning stage for explicit user plan sign-off. |
 | `AGENT_PERMISSION_PROFILE`| `string`| `ask-always`| Policy for external actions: `auto-approve`, `ask-always`, or `custom`. |
-| `AGENT_VERIFY` | `bool` | `true` | When true, independently recomputes the headline analytical figure via an alternate route. |
-| `AGENT_GROUNDING_CHECK`| `bool` | `true` | Pins final textual numbers against raw execution stdout to eliminate hallucinations. |
+| `AGENT_VERIFY` | `bool` | `true` | When true, independently recomputes headline analytical figures via alternative routes. |
+| `AGENT_GROUNDING_CHECK`| `bool` | `true` | Validates narrative claims and Markdown table cells against execution DataFrames. |
 | `AGENT_TURN_TIMEOUT` | `float` | `300.0` | Total turn wall-clock deadline in seconds. |
 
 ---
 
-## 6. System Profiling & Network Security
+## 6. SRE, Observability, Scaling & Queues
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
-| `SYSTEM_PROFILE` | `string` | `server` | Hardware sizing profile: `server`, `workstation`, or `laptop`. |
+| `REDIS_URL` | `string` | `redis://localhost:6379/0` | Connection string for distributed job queue, trajectory caching, and pub/sub event bus. |
+| `QUEUE_BACKEND` | `string` | `inprocess` | Job queue engine: `inprocess` or `redis`. |
+| `CACHE_BACKEND` | `string` | `inprocess` | Semantic trajectory cache engine: `inprocess` or `redis`. |
+| `BACKUP_INTERVAL_HOURS` | `int` | `6` | Automated background SQLite online WAL checkpoint and snapshot backup interval. |
+| `BACKUP_KEEP_COUNT` | `int` | `5` | Maximum number of rotating database backups retained in `backups/`. |
+| `IDEMPOTENCY_TTL_SECONDS`| `int` | `300` | Time window for caching completed turn results by client request hash. |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`| `string` | `""` | Target OTLP gRPC/HTTP endpoint for OpenTelemetry distributed traces. |
+| `OTEL_SERVICE_NAME` | `string` | `wizard` | Service identifier reported in distributed trace spans. |
+| `PLOT_FORMAT` | `string` | `html` | Chart output format: `html` (interactive Plotly DOM) or `png` (static matplotlib). |
 | `CORS_ALLOW_ORIGINS` | `string` | `http://localhost:3000` | Comma-separated allowlist for browser cross-origin requests. |
 | `API_KEY` | `string` | `""` | When set, all mutating control plane routes require the `X-API-Key` HTTP header. |
 | `SESSION_MAX_ACTIVE` | `int` | `8` | Maximum concurrent analytical sessions before queueing. |
-| `QUEUE_BACKEND` | `string` | `inprocess` | Job queue engine: `inprocess` or `redis`. |
-| `CACHE_BACKEND` | `string` | `inprocess` | Semantic trajectory cache engine: `inprocess` or `redis`. |
-| `PLOT_FORMAT` | `string` | `html` | Chart output format: `html` (interactive Plotly DOM) or `png` (static matplotlib). |
 

@@ -50,16 +50,17 @@ wizard init [flags]
 |---|---|---|---|
 | `--provider` | `string` | Configures the primary LLM provider: `ollama`, `lmstudio`, `gemini`, `anthropic`, `openai`, or `custom_gateway`. | `ollama` |
 | `--data-mode` | `string` | Configures privacy policy: `local-only` (zero cloud egress), `hybrid` (redacted cloud queries), or `cloud-only`. | `local-only` |
+| `--embedding-provider` | `string` | Configures the embedding provider: `ollama`, `lmstudio`, `openai`, `gemini`, `custom_gateway`, or `none`. Empty follows `--provider`. | `""` (follows provider) |
+| `--embedding-model` | `string` | Pins the vector embedding model (e.g. `nomic-embed-text`, `bge-m3`, `text-embedding-3-small`). | `""` (auto-discover/default) |
+| `--manager-model` | `string` | Pins the Manager reasoning model (e.g. `qwen3:8b`, `gemini-2.5-flash`, `claude-3-5-sonnet-20241022`). | `qwen3:8b` |
+| `--worker-model` | `string` | Pins the Worker Python coding model (e.g. `qwen2.5-coder:7b`). | `qwen2.5-coder:7b` |
+| `--pull-models` | `bool` | Automatically triggers `ollama pull` for default manager (`qwen3:8b`), worker (`qwen2.5-coder:7b`), and embedding model (`nomic-embed-text`). | `false` |
 | `--gemini-key` | `string` | Injects Google Gemini API Key into `backend/.env`. | `""` |
 | `--anthropic-key` | `string` | Injects Anthropic Claude API Key into `backend/.env`. | `""` |
 | `--openai-key` | `string` | Injects OpenAI API Key into `backend/.env`. | `""` |
 | `--gateway-url` | `string` | Sets OpenAI-compatible gateway endpoint URL (Groq, Together, vLLM, OpenRouter). | `""` |
 | `--gateway-key` | `string` | Injects authentication bearer token for custom gateway. | `""` |
-| `--model` | `string` | Pins the Manager reasoning model (e.g. `gemini-2.5-flash`, `claude-3-5-sonnet-20241022`). | `""` |
-| `--worker-model` | `string` | Pins the Worker Python coding model. | `""` |
-| `--pull-models` | `bool` | Automatically triggers `ollama pull` for default manager (`qwen2.5:3b`) and worker (`qwen2.5-coder:7b`). | `false` |
-| `--skip-frontend` | `bool` | Skips frontend bundle installation and compilation. | `false` |
-| `--skip-backend` | `bool` | Skips Python virtualenv creation and package installation. | `false` |
+| `--base-url` | `string` | Overrides base URL for the active provider. | `""` |
 
 ---
 
@@ -91,13 +92,20 @@ wizard stop
 ---
 
 ### `wizard doctor` / `wizard status`
-Performs an in-depth operational audit of the Wizard deployment, verifying process table health, PID state, log disk usage, OS sandbox capabilities (Landlock/seccomp/seatbelt), and active provider configuration.
+Performs an in-depth operational audit of the Wizard deployment, verifying supervisor and child process PIDs, log file sizes, active `API_PROVIDER`, `DATA_MODE`, `EMBEDDING_PROVIDER`, `EMBEDDING_MODEL`, `EXECUTION_BACKEND` reachability (including Docker socket probes), and live backend configuration (`GET /api/config`).
 
 ```bash
 wizard doctor
 # Alias:
 wizard status
 ```
+
+#### Diagnostic Output Fields:
+- **Daemon & PIDs:** Supervisor PID, backend PID, and frontend PID with process liveness detection.
+- **Log Sizes:** Exact disk usage for `backend.log`, `frontend.log`, and `daemon.log`.
+- **Model & Embedding Configuration:** Active `API_PROVIDER`, `DATA_MODE`, `EMBEDDING_PROVIDER`, and `EMBEDDING_MODEL`.
+- **Execution & Sandbox:** Active execution containment (`host` Landlock/sandbox-exec or `docker` container engine).
+- **Backend Reachability:** Direct HTTP validation against backend health and configuration endpoints.
 
 ---
 

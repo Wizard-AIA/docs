@@ -71,7 +71,9 @@ Spawns an isolated Python subprocess daemon per session over a loopback socket. 
 
 ### 2. Containerized Docker Backend (`EXECUTION_BACKEND=docker`)
 Spawns a dedicated Docker micro-container per session with full cgroups isolation:
-- **Read-Only Root Filesystem**: Prevents modification of base image libraries.
+- **Read-Only Root Filesystem**: Mounts the container rootfs as read-only (`read_only=True`), preventing modification of base runtime libraries.
+- **Unprivileged Non-Root User**: Runs as `user="1000:1000"` with `cap_drop=["ALL"]` and `security_opt=["no-new-privileges:true"]`.
+- **Docker Socket Mount Prevention**: Hardened `validate_container_config` blocks `/var/run/docker.sock` from ever being mounted into sandbox containers, preventing container breakout attacks.
 - **Memory Ceiling (`SANDBOX_MEM_LIMIT=2g`)**: Prevents out-of-memory exhaustion of the host machine.
 - **PIDs Limit (`SANDBOX_PIDS_LIMIT=256`)**: Prevents fork bombs or runaway multithreading.
 - **Network Disablement (`SANDBOX_NETWORK_DISABLED=true`)**: Drops the `eth0` container interface, preventing any network egress.

@@ -18,9 +18,13 @@ Interactive OpenAPI 3.1 documentation is served live on your instance at **`http
 
 ## 2. Core REST Endpoints
 
-### System & Diagnostics
-- `GET /health`: Cluster health check, active version, backend name (`host`/`docker`), and default provider.
-- `GET /api/config`: Capabilities manifest used by the frontend to render feature workbenches (data modes, sandbox capabilities, active tier).
+### System, Health & SRE Diagnostics
+- `GET /health`: Comprehensive cluster readiness check (alias to `/health/ready`).
+- `GET /health/live`: Kubernetes process liveness probe returning HTTP 200 `{"status": "ok"}` when the process is alive.
+- `GET /health/ready`: Kubernetes cluster readiness probe that actively validates SQLite writeability, Redis reachability, and Docker socket health. Returns HTTP 503 if any critical dependency is degraded.
+- `GET /metrics`: Prometheus-compatible exposition format reporting Time-To-First-Token (TTFT), rolling p50/p90/p95/p99 latency quantiles, token generation counters, and error budgets.
+- `GET /api/config`: Capabilities manifest used by the frontend to render feature workbenches (data modes, sandbox capabilities, active tier, embedding status).
+- `PATCH /api/config`: Dynamically updates runtime configuration (`API_PROVIDER`, `DATA_MODE`, `EMBEDDING_PROVIDER`, `EMBEDDING_REMOTE_MODEL`, etc.) with atomic `.env` persistence and dynamic embedding service re-warming.
 - `GET /api/sandbox/selftest`: Probes live OS sandbox enforcement (Landlock, seccomp, seatbelt) and returns containment verdict.
 
 ### Session Lifecycle
@@ -40,7 +44,8 @@ Interactive OpenAPI 3.1 documentation is served live on your instance at **`http
 - `POST /api/skills/install`: Stages and imports an external skill from a Git URL.
 
 ### Analytical Turn Execution
-- `POST /api/chat`: Executes a synchronous analytical turn and returns the complete synthesized response with code and citations.
+- `POST /api/chat`: Executes a synchronous analytical turn and returns the complete synthesized response with code and citations. Includes idempotency locking.
+- `POST /api/chat/stream`: Server-Sent Events (SSE) streaming endpoint for environments where bidirectional WebSockets are restricted or subject to backpressure shedding. Returns streaming event frames identical to `/ws/chat`.
 
 ---
 
