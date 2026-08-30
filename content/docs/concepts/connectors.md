@@ -38,7 +38,7 @@ You can attach contextual documentation alongside your dataset:
 
 ---
 
-## ️ Relational Database Connectors
+## Relational Database Connectors
 
 Wizard supports direct connections to relational databases (PostgreSQL, MySQL, SQLite, DuckDB):
 

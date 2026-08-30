@@ -40,7 +40,7 @@ Wizard supports streaming ingestion for structured and semi-structured formats w
 
 ## Step 3: Issue Natural-Language Analytical Inquiries
 
-Unlike basic SQL-generation wrappers, Wizard uses an iterative **Observe ➔ Decide ➔ Act** loop designed for open-ended, multi-step business inquiries:
+Unlike basic SQL-generation wrappers, Wizard uses an iterative **Observe -> Decide -> Act** loop designed for open-ended, multi-step business inquiries:
 
 ```text
 "Analyze our Q3 enterprise churn. Which customer segments experienced the highest contract downgrades, what are the primary statistical drivers, and how does discounting correlate with churn probability?"

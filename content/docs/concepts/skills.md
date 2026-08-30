@@ -54,7 +54,7 @@ Enterprise security mandates that external skills cannot introduce arbitrary cod
       [Any .py, .sh, .exe, .so]                  [Pure SKILL.md Markdown]
                  │                                           │
                  ▼                                           ▼
-         ❌ REFUSED OUTRIGHT                         ✅ STAGED FOR REVIEW
+         [REJECTED OUTRIGHT]                         [STAGED FOR REVIEW]
    "Skills cannot contain binaries"               Pin commit hash & Prompt User
 ```
 

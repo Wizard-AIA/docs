@@ -4,7 +4,7 @@ Wizard operates on an **autonomous, self-correcting iterative feedback loop** ra
 
 ---
 
-## 🏗️ High-Level System Architecture
+## High-Level System Architecture
 
 The Next.js client and the FastAPI backend communicate over a streaming WebSocket (`/ws/chat`) with automatic fallback to Server-Sent Events (`POST /api/chat/stream`).
 
@@ -57,7 +57,7 @@ Per turn, the control plane coordinates:
 
 ---
 
-## 🎭 The Tri-Model System (Manager, Worker, Embeddings)
+## The Tri-Model System (Manager, Worker, Embeddings)
 
 Wizard decouples analytical intelligence into three first-class, independently configurable model pillars:
 
@@ -83,7 +83,7 @@ Wizard decouples analytical intelligence into three first-class, independently c
 
 ---
 
-## ⚡ Dynamic Hybrid Vector & BM25 Search Engine
+## Dynamic Hybrid Vector & BM25 Search Engine
 
 Wizard incorporates a dual-retriever search pipeline combining exact lexical keyword search with dense vector embeddings:
 
@@ -96,7 +96,7 @@ Wizard incorporates a dual-retriever search pipeline combining exact lexical key
 
 ---
 
-## 🔄 Stateful Resumable DAG Agent Architecture
+## Stateful Resumable DAG Agent Architecture
 
 In place of fragile linear ReAct loops, complex analytical multi-step tasks are executed as a Directed Acyclic Graph (`ExecutionDAG`):
 - **Topological Scheduling:** Nodes execute only after all prerequisite parent nodes have completed successfully.
@@ -105,7 +105,7 @@ In place of fragile linear ReAct loops, complex analytical multi-step tasks are 
 
 ---
 
-## 🛡️ The Evidence-Backed Control Plane
+## The Evidence-Backed Control Plane
 
 To eliminate LLM hallucinations, Wizard applies multi-layered verification:
 
@@ -116,7 +116,7 @@ To eliminate LLM hallucinations, Wizard applies multi-layered verification:
 
 ---
 
-## 📡 Distributed Observability & Horizontal Scaling
+## Distributed Observability & Horizontal Scaling
 
 - **W3C OpenTelemetry Tracing:** Standardized distributed spans with W3C `traceparent` propagation across HTTP, WebSockets, background tasks, and supervisor daemons (`telemetry.py`).
 - **Prometheus Metrics (`/metrics`):** Captures Time-To-First-Token (TTFT), rolling p50/p90/p95/p99 latency quantiles, error budgets, and token generation counters.
