@@ -56,11 +56,13 @@ Privacy policies can be attached to individual data sources. For example, a publ
 
 ---
 
-## 4. Vector Embeddings & RAG Privacy
+## 4. Vector Embeddings & Tri-Model Privacy Governance
 
-Text chunks indexed for Retrieval-Augmented Generation (RAG) and skill discovery follow the exact same data policy:
-- Under `local-only`, embeddings are computed via local HuggingFace/Ollama embedding models (e.g. `embeddinggemma` or `nomic-embed-text`) or fall back to an in-process lexical hashing encoder.
-- Cloud embedding endpoints (e.g. `models/gemini-embedding-001`) are rejected under `local-only` mode.
+Text chunks indexed for Retrieval-Augmented Generation (RAG), table schema indexing, and skill discovery adhere to the session's active data mode:
+- **`local-only` Mode:** Cloud embedding providers (OpenAI, Gemini, Custom Gateways) are strictly forbidden. The system utilizes local Ollama embeddings (`nomic-embed-text`, `bge-m3`), in-process sentence-transformers (`all-MiniLM-L6-v2`), or cascades safely to the deterministic Blake2b hashing encoder.
+- **`hybrid` Mode:** Users may choose high-dimensional cloud embeddings (such as OpenAI `text-embedding-3-small` or Gemini `text-embedding-004`). Prompt text is subjected to statistical schema redaction (`should_redact`), guaranteeing raw cell contents are stripped before reaching external embedding APIs.
+- **`cloud-only` Mode:** All three roles (Manager, Worker, Embeddings) communicate over encrypted HTTPS endpoints with token budgeting and financial telemetry.
+- **Offline Fallback Guarantee:** If network connectivity drops or a model is uninstalled, the embedding role automatically falls back to an instant zero-disk 384-dimensional Blake2b hashing encoder without analytical interruption.
 
 ---
 

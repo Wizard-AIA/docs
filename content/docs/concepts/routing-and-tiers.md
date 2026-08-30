@@ -1,30 +1,47 @@
 # Smart Task Routing & Execution Tiers
 
-Not every turn needs the same amount of model. Wizard classifies each one
-and dispatches it to a model sized for that specific task, rather than
-routing everything through the same heavyweight pair — see
-[Architecture](architecture.md) for what the manager, worker, and optional
-vision roles (`MODEL_NAME`, `WORKER_MODEL_NAME`, `VISION_MODEL_NAME`) each do.
+Not every turn needs the same amount of model compute. Wizard classifies each incoming turn and dispatches it across a **Tri-Model Architecture** (**Manager**, **Worker**, and **Embeddings**) sized specifically for that task, rather than routing everything through the same heavyweight pair — see [Architecture](architecture.md).
 
 ---
 
-## Task Complexity Classifier
+## 1. In-Process SLM Intent Router
 
-Rather than routing every single turn through heavy reasoning models, the **Task Router** inspects the user query and dataset context to classify the task into three complexity tiers:
+Before an analytical loop is scheduled, an in-process **SLM Router** (`SLMRouter`) performs intent classification in sub-10ms:
 
-| Tier | Characteristics | Example Operations | Target Model |
-|---|---|---|---|
-| **`LIGHTWEIGHT`** | Direct schema queries, metadata extraction, column definitions, simple formatting. | "What columns are in this table?", "Show table summary" | Small fast model (`1.5B`–`3B`) or fast local model. |
-| **`STANDARD`** | Single-pass transformations, basic statistics, standard filtering and aggregations. | "What is the average tip by day?", "Filter orders where status = shipped" | Balanced instruct model (`7B`–`8B`). |
-| **`REASONING_HEAVY`** | Multi-table joins, hypothesis validation, anomaly investigation, complex ML modeling. | "Which user cohorts drive churn and why?", "Train a forecast model on sales" | Frontier / Deep Reasoning model (`7B+` coder + reasoning manager). |
+| Intent Class | Description | Routing Decision | Typical Latency |
+|---|---|---|:---:|
+| **`METADATA`** | Column lists, table schemas, dataset shapes, row counts. | Synthesizes response immediately from catalog memory without spinning up agent turn. | `< 10ms` |
+| **`CHITCHAT`** | Greetings, operational inquiries, help commands. | Handled directly via lightweight templates or fast SLM. | `< 50ms` |
+| **`LIGHTWEIGHT`** | Simple scalar filtering, distinct value inspection, single-pass counts. | Dispatched to compact Worker model (`1.5B`–`3B`) with single-step plan. | `< 1.5s` |
+| **`DEEP`** | Multi-table joins, causal modeling, hypothesis testing, ML training. | Enters full `ExecutionDAG` multi-agent loop with adversarial verification. | Streaming |
 
 ---
 
-## Dynamic Turn Downscaling
+## 2. The Tri-Model Routing Matrix
 
-When a user has multiple local models installed (e.g., both `qwen2.5:3b` and a larger `qwen2.5:14b`), Wizard automatically routes `LIGHTWEIGHT` sub-tasks to the faster model while preserving the primary model for `REASONING_HEAVY` investigation.
+Wizard independently routes three model roles:
 
-This produces:
-- **Instant Response Times:** Simple questions answer in under 2 seconds.
-- **Lower Resource Consumption:** Minimizes token burn and CPU/GPU memory swapping.
-- **Uncompromised Quality:** Complex analytical depth remains available whenever required.
+```diagram
+User Query ──► SLM Intent Router ──► [Manager Role]    (Planning & Synthesis)
+                                 ──► [Embedding Role]  (Vector RAG & Search)
+                                 ──► [Worker Role]     (Code & Sandbox)
+```
+
+1. **Manager Role (`MODEL_NAME`):**
+   - Directs investigation strategy and formulates hypotheses.
+   - Sized to model tier: `compact` (4 steps), `balanced` (12 steps), or `full` (24 steps).
+2. **Worker Role (`WORKER_MODEL_NAME`):**
+   - Authors Python (Pandas, Polars, DuckDB) or SQL queries.
+   - Receives execution feedback and self-corrects tracebacks.
+3. **Embedding Role (`EMBEDDING_PROVIDER`, `EMBEDDING_REMOTE_MODEL`):**
+   - Vectors document chunks and schemas for hybrid RAG search.
+   - Routes automatically: Local Ollama $\to$ In-Process Sentence-Transformers $\to$ Deterministic Blake2b Hashing.
+
+---
+
+## 3. Dynamic Turn Downscaling & VRAM Management
+
+When multiple models are available locally, Wizard dynamically manages hardware allocations:
+- **Zero VRAM Contention:** Manager and Worker roles unload sequentially during memory-constrained operations (`llm_keep_alive`), avoiding memory paging.
+- **Fast-Path Metadata:** Schema and column queries never invoke the coding worker.
+- **Continuous Quality:** Complex analytical depth remains available whenever required.
