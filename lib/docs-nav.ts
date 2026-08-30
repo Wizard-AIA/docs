@@ -56,16 +56,29 @@ export const DOCS_NAV: DocSection[] = [
 
 export const ALL_DOC_PAGES: DocPage[] = DOCS_NAV.flatMap((section) => section.pages);
 
+export const DOC_ALIASES: Record<string, string> = {
+  "architecture/overview": "concepts/architecture",
+  "architecture": "concepts/architecture",
+  "overview": "getting-started/quickstart",
+};
+
+export function resolveDocSlug(slug: string): string {
+  return DOC_ALIASES[slug] || slug;
+}
+
 export function findDocPage(slug: string): DocPage | undefined {
-  return ALL_DOC_PAGES.find((p) => p.slug === slug);
+  const canonicalSlug = resolveDocSlug(slug);
+  return ALL_DOC_PAGES.find((p) => p.slug === canonicalSlug);
 }
 
 export function findSectionForSlug(slug: string): DocSection | undefined {
-  return DOCS_NAV.find((section) => section.pages.some((p) => p.slug === slug));
+  const canonicalSlug = resolveDocSlug(slug);
+  return DOCS_NAV.find((section) => section.pages.some((p) => p.slug === canonicalSlug));
 }
 
 export function getAdjacentPages(slug: string): { prev?: DocPage; next?: DocPage } {
-  const index = ALL_DOC_PAGES.findIndex((p) => p.slug === slug);
+  const canonicalSlug = resolveDocSlug(slug);
+  const index = ALL_DOC_PAGES.findIndex((p) => p.slug === canonicalSlug);
   if (index === -1) return {};
   return {
     prev: index > 0 ? ALL_DOC_PAGES[index - 1] : undefined,

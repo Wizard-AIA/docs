@@ -254,7 +254,7 @@ export function HeroSection() {
                   </Link>
                   <span className="text-white/20">•</span>
                   <Link
-                    href="/docs/architecture/overview"
+                    href="/docs/concepts/architecture"
                     className="hover:text-white transition-colors"
                   >
                     Tri-Model Specs

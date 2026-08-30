@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { ALL_DOC_PAGES } from "@/lib/docs-nav";
+import { ALL_DOC_PAGES, DOC_ALIASES, resolveDocSlug } from "@/lib/docs-nav";
 
 const CONTENT_DIR = path.join(process.cwd(), "content", "docs");
 
@@ -10,7 +10,9 @@ export interface DocSource {
 }
 
 export function getAllDocSlugs(): string[] {
-  return ALL_DOC_PAGES.map((p) => p.slug);
+  const canonicalSlugs = ALL_DOC_PAGES.map((p) => p.slug);
+  const aliasSlugs = Object.keys(DOC_ALIASES);
+  return [...canonicalSlugs, ...aliasSlugs];
 }
 
 // Doc source links are file-relative to the linking page (mkdocs convention),
@@ -33,11 +35,12 @@ function rewriteRelativeLinks(markdown: string, slug: string): string {
 }
 
 export function getDocSource(slug: string): DocSource {
-  const filePath = path.join(CONTENT_DIR, `${slug}.md`);
+  const canonicalSlug = resolveDocSlug(slug);
+  const filePath = path.join(CONTENT_DIR, `${canonicalSlug}.md`);
   const raw = fs.readFileSync(filePath, "utf8");
   const titleMatch = raw.match(/^#\s+(.+)$/m);
-  const title = titleMatch ? titleMatch[1].trim() : slug;
-  const body = rewriteRelativeLinks(raw, slug);
+  const title = titleMatch ? titleMatch[1].trim() : canonicalSlug;
+  const body = rewriteRelativeLinks(raw, canonicalSlug);
   return { title, body };
 }
 
