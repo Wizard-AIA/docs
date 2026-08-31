@@ -2,6 +2,8 @@ import type { ReactNode } from "react"
 import Link from "next/link"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import remarkMath from "remark-math"
+import rehypeKatex from "rehype-katex"
 import { slugifyHeading } from "@/lib/docs-content"
 import { DocCodeBlock } from "@/components/docs/doc-code-block"
 
@@ -37,7 +39,8 @@ export function DocContent({ markdown }: { markdown: string }) {
   return (
     <div className="doc-prose w-full max-w-full min-w-0 overflow-hidden break-words text-[15px] sm:text-[15.5px] leading-[1.75] text-white/80 font-normal">
       <ReactMarkdown
-        remarkPlugins={[remarkGfm]}
+        remarkPlugins={[remarkGfm, remarkMath]}
+        rehypePlugins={[rehypeKatex]}
         components={{
           h1: ({ children }) => (
             <h1 className="mb-6 font-display text-4xl lg:text-5xl font-semibold tracking-tight text-white leading-[1.15]">
